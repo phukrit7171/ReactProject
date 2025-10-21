@@ -16,22 +16,7 @@ If you are developing a production application, we recommend using TypeScript wi
 
 Follow these steps to set up a local development environment for this project.
 
-
-1) Prerequisites (Required)
-
-- Node: We recommend Node.js 18.x or later (LTS). Corepack ships with Node 16.10+ but using a recent LTS avoids surprises.
-- Git: to clone the repo and manage branches.
-
-2) Enable Corepack and install pnpm (Optional — required if you want to use pnpm)
-
-Corepack makes it easy to use pnpm which this README assumes in the examples. If you prefer npm or Yarn you can skip this step and use the equivalent package manager commands instead. Run these in PowerShell (pwsh) to enable pnpm:
-
-```powershell
-corepack enable
-corepack prepare pnpm@latest --activate
-```
-
-3) Install dependencies (Required)
+### 1. Install dependencies (Required)
 
 Use the package manager you prefer. Examples:
 
@@ -47,24 +32,25 @@ yarn install
 ```
 
 Notes:
+
 - This project uses the scripts from `package.json`. With pnpm you can run `pnpm dev` (same as `pnpm run dev`). Replace `pnpm` with `npm run` or `yarn` if you choose a different manager.
 
-4) Run the dev server (Required)
+### 2. Run the dev server (Required)
 
 ```powershell
 pnpm dev   # or: npm run dev  /  yarn dev
 ```
 
-The app will start with Vite and provide a local URL (usually https://localhost:5173 or http://localhost:5173). HMR (hot module replacement) is enabled.
+The app will start with Vite and provide a local URL (usually `http://localhost:5173`). HMR (hot module replacement) is enabled.
 
-5) Useful scripts (Informational)
+### 3. Useful scripts (Informational)
 
 - Start dev server: `pnpm dev` (or `npm run dev`, `yarn dev`)
 - Build for production: `pnpm build`
 - Preview production build locally: `pnpm preview`
 - Run ESLint: `pnpm lint`
 
-6) Environment variables (Optional)
+### 4. Environment variables (Optional)
 
 - Vite exposes only variables that start with `VITE_` to client code. Create a `.env.local` (gitignored) for machine-specific values.
 - Example `.env.local`:
@@ -80,7 +66,7 @@ VITE_WS_URL=ws://localhost:3000
 PORT=5173
 ```
 
-7) Troubleshooting & tips (Optional)
+### 5. Troubleshooting & tips (Optional)
 
 - If ports are in use, either stop the process using that port or change `PORT` in `.env.local`.
 - If you see dependency resolution errors, try:
@@ -98,7 +84,7 @@ pnpm install
 pnpm exec eslint --fix .
 ```
 
-8) Contributing (Optional)
+### 6. Contributing (Optional)
 
 - Create a feature branch from `main`.
 - Keep commits small and focused; add tests for new logic when reasonable.
