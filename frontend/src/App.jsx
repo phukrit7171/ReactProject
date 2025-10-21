@@ -16,3 +16,23 @@ import PageWrapper from './components/layout/PageWrapper.jsx'
 
 // Main App component function
 // Sets up routing, theming, and layout structure
+const App = () => {
+  return (
+    <Router>
+        {/* <ThemeProvider theme={theme}> */}
+        <CssBaseline />
+        <Navbar />
+        <PageWrapper>
+          <Routes>
+            {/* Example route definitions */}
+            <Route path="/" element={<div>Home Page</div>} />
+            <Route path="/about" element={<div>About Page</div>} />
+            {/* Additional routes can be added here */}
+          </Routes>
+        </PageWrapper>
+        {/* </ThemeProvider> */}
+    </Router>
+  )
+}
+
+export default App;

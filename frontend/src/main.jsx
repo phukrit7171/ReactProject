@@ -15,3 +15,10 @@ import './index.css'
 // Render the application to the root element in index.html
 // Wrap with StrictMode for development checks
 // Optionally wrap with Redux Provider if using Redux
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    {/* <Provider store={store}> */}
+      <App />
+    {/* </Provider> */}
+  </React.StrictMode>
+)

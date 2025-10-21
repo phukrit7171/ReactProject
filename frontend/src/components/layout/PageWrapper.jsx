@@ -7,3 +7,14 @@ import Box from '@mui/material/Box';
 
 // PageWrapper component to provide consistent page layout
 // Adds padding, max-width, and other layout properties to page content
+const PageWrapper = ({ children }) => {
+  return (
+    <Container maxWidth="lg">
+      <Box sx={{ padding: 2 }}>
+        {children}
+      </Box>
+    </Container>
+  );
+};
+
+export default PageWrapper;
