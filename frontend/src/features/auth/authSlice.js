@@ -1,28 +1,65 @@
-// Authentication state slice
-// Manages authentication-related state using Redux Toolkit
-// Import createSlice from Redux Toolkit
 import { createSlice } from '@reduxjs/toolkit';
+import { apiSlice } from '../../services/apiSlice.js';
+import { getToken } from '../../utils/tokenStorage.js';
 
-// Auth slice for managing user authentication state
-// Handles user login, logout, and authentication status
+// Read token from storage on initial load
+const token = getToken();
+
+const initialState = {
+  isAuthenticated: !!token, // Set initial auth state based on token
+  user: null,
+};
+
 const authSlice = createSlice({
   name: 'auth',
-  initialState: {
-    isAuthenticated: false,
-    user: null,
-  },
+  initialState,
+  // Reducers for actions we dispatch manually
   reducers: {
-    login(state, action) {
-      state.isAuthenticated = true;
-      state.user = action.payload;
-    },
-    logout(state) {
+    // We'll use this if we manually clear the token (e.g., on 401 error)
+    logout: (state) => {
       state.isAuthenticated = false;
       state.user = null;
     },
   },
+  // extraReducers to "listen" for actions from other slices (like apiSlice)
+  extraReducers: (builder) => {
+    // When login is successful
+    builder.addMatcher(
+      apiSlice.endpoints.login.matchFulfilled,
+      (state, { payload }) => {
+        // payload from login is { token: '...' }
+        state.isAuthenticated = true;
+        // Note: The token is saved in LoginForm, not in the Redux state
+      }
+    );
+    // When getMe is successful
+    builder.addMatcher(
+      apiSlice.endpoints.getMe.matchFulfilled,
+      (state, { payload }) => {
+        // payload from getMe is the user object
+        state.isAuthenticated = true;
+        state.user = payload;
+      }
+    );
+    // When logout is successful OR getMe fails (e.g., 401)
+    builder.addMatcher(
+      apiSlice.endpoints.logout.matchFulfilled,
+      (state) => {
+        state.isAuthenticated = false;
+        state.user = null;
+      }
+    );
+    builder.addMatcher(
+      apiSlice.endpoints.getMe.matchRejected,
+      (state, { payload }) => {
+        if (payload?.status === 401) {
+          state.isAuthenticated = false;
+          state.user = null;
+        }
+      }
+    );
+  },
 });
 
-// Export actions and reducer
-export const { login, logout } = authSlice.actions;
+export const { logout } = authSlice.actions;
 export default authSlice.reducer;
