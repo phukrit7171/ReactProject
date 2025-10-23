@@ -10,7 +10,7 @@ import App from './App.jsx'
 // Import the Redux store if using Redux
 // import { store } from './store/store.js' // Example Redux store import
 // Import global styles
-import './index.css'
+
 
 // Render the application to the root element in index.html
 // Wrap with StrictMode for development checks
@@ -18,7 +18,7 @@ import './index.css'
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     {/* <Provider store={store}> */}
-      <App />
+      <App /> 
     {/* </Provider> */}
   </React.StrictMode>
 )

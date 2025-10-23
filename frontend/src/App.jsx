@@ -1,38 +1,46 @@
-// Root React component of the application
-// Contains the main routing setup and serves as the parent for all other components
-import React from 'react'
-// Import routing components from react-router-dom
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-// Import Material UI theme components if using them
-import { ThemeProvider } from '@mui/material/styles'
-import CssBaseline from '@mui/material/CssBaseline'
-// Import the theme configuration
-// import theme from './constants/muiThemeConfig.js' // Custom theme configuration
-// Import route definitions
-// import routes from './constants/routes.js' // Defined routes configuration
-// Import layout components
-import Navbar from './components/layout/Navbar.jsx'
-import PageWrapper from './components/layout/PageWrapper.jsx'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-// Main App component function
-// Sets up routing, theming, and layout structure
+// Import Layout
+import MainLayout from './components/layout/MainLayout.jsx'; // <--- Import Layout ใหม่
+import ProtectedRoute from './components/layout/ProtectedRoute.jsx';
+
+// Import Pages
+import LoginPage from './pages/LoginPage.jsx';
+import RegisterPage from './pages/RegisterPage.jsx';
+import ChatPage from './pages/ChatPage.jsx';
+import FriendsPage from './pages/FriendsPage.jsx';
+import SettingsPage from './pages/SettingsPage.jsx';
+import NotFoundPage from './pages/NotFoundPage.jsx';
+
 const App = () => {
   return (
     <Router>
-        {/* <ThemeProvider theme={theme}> */}
-        <CssBaseline />
-        <Navbar />
-        <PageWrapper>
-          <Routes>
-            {/* Example route definitions */}
-            <Route path="/" element={<div>Home Page</div>} />
-            <Route path="/about" element={<div>About Page</div>} />
-            {/* Additional routes can be added here */}
-          </Routes>
-        </PageWrapper>
-        {/* </ThemeProvider> */}
+      <Routes>
+        {/* === 1. Route ที่อยู่นอก Layout === */}
+        {/* (ไม่จำเป็นต้องมี CssBaseline ที่นี่ เพราะ MainLayout มีแล้ว) */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+
+        {/* === 2. Route ที่อยู่ข้างใน Layout === */}
+        <Route 
+          path="/" 
+          element={
+            <ProtectedRoute> {/* หุ้มด้วยตัวเช็คล็อกอิน */}
+              <MainLayout /> {/* หุ้มด้วย Layout (Navbar+Wrapper) */}
+            </ProtectedRoute>
+          }
+        >
+          {/* หน้าย่อยเหล่านี้จะไปแทนที่ <Outlet /> */}
+          <Route index element={<ChatPage />} /> {/* path="/" (หน้าแรก) */}
+          <Route path="friends" element={<FriendsPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+        </Route>
+
+      </Routes>
     </Router>
-  )
-}
+  );
+};
 
 export default App;
