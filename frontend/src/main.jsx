@@ -8,7 +8,7 @@ import App from './App.jsx'
 // Import Redux Provider if state management is needed
 import { Provider } from 'react-redux'
 // Import the Redux store if using Redux
-import { store } from './store/store.js' // Example Redux store import
+import store from './store/store.js' // Example Redux store import
 // Import global styles
 
 
