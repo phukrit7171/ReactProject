@@ -6,3 +6,10 @@ import Alert from '@mui/material/Alert';
 
 // ErrorMessage component for displaying error messages to users
 // Provides consistent error message styling and behavior
+const ErrorMessage = ({ message, severity = 'error' }) => {
+  return (
+    <Alert severity={severity}> {message} </Alert>
+  );
+};
+
+export default ErrorMessage;

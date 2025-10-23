@@ -10,3 +10,13 @@ import { configureStore } from '@reduxjs/toolkit';
 
 // Main Redux store configuration
 // Combines all feature slices into a single store
+const store = configureStore({
+  reducer: {
+    // auth: authSlice,
+    // chat: chatSlice,
+    // friends: friendsSlice,
+    // users: usersSlice,
+  },
+});
+
+export default store;

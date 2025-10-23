@@ -17,27 +17,26 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        {/* === 1. Route ที่อยู่นอก Layout === */}
-        {/* (ไม่จำเป็นต้องมี CssBaseline ที่นี่ เพราะ MainLayout มีแล้ว) */}
+        {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="*" element={<NotFoundPage />} />
 
-        {/* === 2. Route ที่อยู่ข้างใน Layout === */}
-        <Route 
-          path="/" 
+        {/* Protected Routes with MainLayout */}
+        <Route
+          path="/"
           element={
-            <ProtectedRoute> {/* หุ้มด้วยตัวเช็คล็อกอิน */}
-              <MainLayout /> {/* หุ้มด้วย Layout (Navbar+Wrapper) */}
+            <ProtectedRoute>
+              <MainLayout />
             </ProtectedRoute>
           }
         >
-          {/* หน้าย่อยเหล่านี้จะไปแทนที่ <Outlet /> */}
-          <Route index element={<ChatPage />} /> {/* path="/" (หน้าแรก) */}
+          <Route index element={<ChatPage />} />
           <Route path="friends" element={<FriendsPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
 
+        {/* Fallback Route */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>
   );

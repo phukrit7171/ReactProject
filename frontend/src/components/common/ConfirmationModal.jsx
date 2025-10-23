@@ -9,3 +9,17 @@ import DialogActions from '@mui/material/DialogActions';
 
 // ConfirmationModal component for confirming important user actions
 // Provides consistent confirmation dialogs throughout the application
+const ConfirmationModal = ({ open, title, content, onConfirm, onCancel }) => {
+  return (
+    <Dialog open={open} onClose={onCancel}>
+        <DialogTitle>{title}</DialogTitle>
+        <DialogContent>{content}</DialogContent>
+        <DialogActions>
+            <button onClick={onCancel}>Cancel</button>
+            <button onClick={onConfirm}>Confirm</button>
+        </DialogActions>
+    </Dialog>
+  );
+};
+
+export default ConfirmationModal;
