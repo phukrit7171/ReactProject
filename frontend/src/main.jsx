@@ -6,9 +6,9 @@ import ReactDOM from 'react-dom/client'
 // Import the main App component
 import App from './App.jsx'
 // Import Redux Provider if state management is needed
-// import { Provider } from 'react-redux'
+import { Provider } from 'react-redux'
 // Import the Redux store if using Redux
-// import { store } from './store/store.js' // Example Redux store import
+import { store } from './store/store.js' // Example Redux store import
 // Import global styles
 
 
@@ -17,8 +17,8 @@ import App from './App.jsx'
 // Optionally wrap with Redux Provider if using Redux
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    {/* <Provider store={store}> */}
+    <Provider store={store}>
       <App />
-    {/* </Provider> */}
-  </React.StrictMode>,
+    </Provider>
+  </React.StrictMode>
 )
