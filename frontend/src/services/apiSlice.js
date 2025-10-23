@@ -11,7 +11,7 @@ export const apiSlice = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: API_ENDPOINTS.BASE_URL, //
     // เตรียม header ก่อนส่ง request ทุกครั้ง
-    prepareHeaders: (headers, { getState }) => {
+    prepareHeaders: (headers) => {
       const token = getToken(); //
       if (token) {
         // สมมติว่า Backend ใช้ Bearer Token
