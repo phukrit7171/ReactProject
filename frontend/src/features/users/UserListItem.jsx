@@ -2,14 +2,27 @@
 // Represents a single user in the user list
 import React from 'react';
 // Import Material UI components for list items
-import ListItem from '@mui/material/ListItem';
+import { ListItem, ListItemText, Button } from '@mui/material';
 
-// UserListItem component for individual user display
-// Shows user name, status, and other relevant information
-const UserListItem = ({ user }) => {
+const UserListItem = ({ user, onSendRequest, isSending }) => {
   return (
-    <ListItem>
-      {user.name} {user.isOnline ? '(Online)' : '(Offline)'}
+    <ListItem
+      key={user.id}
+      secondaryAction={
+        <Button
+          variant="contained"
+          size="small"
+          onClick={() => onSendRequest(user.id)}
+          disabled={isSending}
+        >
+          Send Request
+        </Button>
+      }
+    >
+      <ListItemText
+        primary={user.username}
+        secondary={`Language: ${user.originallang}`}
+      />
     </ListItem>
   );
 };

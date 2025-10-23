@@ -1,30 +1,31 @@
-import React, { useMemo } from 'react';
-import { Box, Typography } from '@mui/material';
-import FriendList from '../features/friends/FriendList.jsx';
-import FriendRequestList from '../features/friends/FriendRequestList.jsx';
-// 1. Import the hooks
+import React, { useMemo } from "react";
+import { Box, Typography } from "@mui/material";
+import FriendList from "../features/friends/FriendList.jsx";
+import FriendRequestList from "../features/friends/FriendRequestList.jsx";
+import UserList from "../features/users/UserList.jsx"; // 1. Import UserList
+import { useNavigate } from "react-router-dom"; // 2. Import useNavigate
 import {
   useGetMyFriendStatusQuery,
   useRespondToRequestMutation,
-} from '../services/apiSlice.js';
-import LoadingSpinner from '../components/common/LoadingSpinner.jsx';
+  useCreateChatroomMutation,
+} from "../services/apiSlice.js";
+import LoadingSpinner from "../components/common/LoadingSpinner.jsx";
 
 const FriendsPage = () => {
+  const navigate = useNavigate();
   // 2. Call the query hook
   const {
     data: friendStatus,
     isLoading,
     isError,
-  } = useGetMyFriendStatusQuery(
-      undefined, 
-      { pollingInterval: 15000 } // Poll for new requests every 15s
-  );
+  } = useGetMyFriendStatusQuery(undefined, { pollingInterval: 15000 });
 
   // 3. Call the mutation hook
   const [respondToRequest] = useRespondToRequestMutation();
+  const [createChatroom] = useCreateChatroomMutation();
 
   // 4. Filter the data into two lists
-  const { friends, requests } = useMemo(() => {
+const { friends, requests } = useMemo(() => {
     const friends = [];
     const requests = [];
     if (friendStatus) {
@@ -41,12 +42,22 @@ const FriendsPage = () => {
 
   const handleRespond = async (friendshipid, response) => {
     try {
-      // 5. Call the mutation
       await respondToRequest({ friendshipid, response }).unwrap();
-      // 'useGetMyFriendStatusQuery' will refetch automatically
-      // because the mutation 'invalidatesTags: ['Friend']'
     } catch (err) {
       console.error('Failed to respond to request:', err);
+    }
+  };
+
+  // 7. สร้างฟังก์ชัน handleStartChat
+  const handleStartChat = async (targetuserid) => {
+    try {
+      // เรียก API `POST /v1/chatrooms`
+      await createChatroom({ targetuserid }).unwrap();
+      // ถ้าสำเร็จ ให้เด้งไปหน้า Chat
+      navigate('/');
+    } catch (err) {
+      console.error('Failed to create chatroom:', err);
+      alert(err.data?.message || 'Failed to start chat');
     }
   };
 
@@ -55,7 +66,8 @@ const FriendsPage = () => {
 
   return (
     <Box sx={{ display: 'flex', height: '100%', gap: 3 }}>
-      <Box sx={{ width: '50%' }}>
+      {/* 8. ปรับ Layout ใหม */}
+      <Box sx={{ width: '33%' }}>
         <Typography variant="h5">Friend Requests</Typography>
         <FriendRequestList
           requests={requests}
@@ -63,12 +75,15 @@ const FriendsPage = () => {
           onDecline={(id) => handleRespond(id, 'decline')}
         />
       </Box>
-      <Box sx={{ width: '50%' }}>
-        <Typography variant="h5">My Friends</Typography>
-        <FriendList friends={friends} />
+      <Box sx={{ width: '33%' }}>
+        <Typography variant="h5">My Friends</Typography>  
+        <FriendList friends={friends} onStartChat={handleStartChat} />
+      </Box>
+      <Box sx={{ width: '33%', borderLeft: '1px solid #ccc', pl: 2 }}>
+        <Typography variant="h5">Find Users</Typography>
+        <UserList />
       </Box>
     </Box>
   );
 };
-
 export default FriendsPage;

@@ -1,15 +1,27 @@
-// Message component
-// Displays a single message in a chat conversation
-import React from 'react';
-// Import Material UI components for message display
-import ListItem from '@mui/material/ListItem';
+import { ListItem, ListItemText, Typography } from '@mui/material';
 
-// Message component for displaying individual chat messages
-// Shows sender, content, and timestamp of a message
 const Message = ({ sender, text, timestamp }) => {
+  const senderName = (typeof sender === 'object' && sender?.username) ? sender.username : sender;
+
   return (
-    <ListItem>
-      <strong>{sender}:</strong> {text} <em style={{ marginLeft: '8px', fontSize: '0.8em', color: '#888' }}>{new Date(timestamp).toLocaleTimeString()}</em>
+    <ListItem alignItems="flex-start">
+      <ListItemText
+        primary={
+          <Typography component="span" variant="body1" sx={{ fontWeight: 'bold' }}>
+            {senderName || 'Sender'}
+          </Typography>
+        }
+        secondary={
+          <>
+            {text}
+            {timestamp && (
+              <Typography component="span" variant="caption" sx={{ display: 'block', color: '#888', mt: 0.5 }}>
+                {new Date(timestamp).toLocaleTimeString()}
+              </Typography>
+            )}
+          </>
+        }
+      />
     </ListItem>
   );
 };

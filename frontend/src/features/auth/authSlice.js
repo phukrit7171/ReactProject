@@ -26,7 +26,7 @@ const authSlice = createSlice({
     // When login is successful
     builder.addMatcher(
       apiSlice.endpoints.login.matchFulfilled,
-      (state, { payload }) => {
+      (state) => {
         // payload from login is { token: '...' }
         state.isAuthenticated = true;
         // Note: The token is saved in LoginForm, not in the Redux state

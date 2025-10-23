@@ -1,18 +1,16 @@
-// Message list component
-// Displays a list of messages in a chat conversation
-import React from 'react';
-// Import Material UI components for list display
 import List from '@mui/material/List';
+import Message from './Message.jsx';
 
-// MessageList component to show all messages in a chat
-// Contains multiple Message components
 const MessageList = ({ messages }) => {
   return (
     <List sx={{ maxHeight: '400px', overflowY: 'auto' }}>
       {messages.map((msg, index) => (
-        <div key={index}>
-          <strong>{msg.sender}:</strong> {msg.text}
-        </div>
+        <Message
+          key={msg.id || index}
+          sender={msg.sender}
+          text={msg.originalmessage} // API spec define 'originalmessage'
+          timestamp={msg.createdAt} // May be 'timestamp' or 'createdAt'
+        />
       ))}
     </List>
   );

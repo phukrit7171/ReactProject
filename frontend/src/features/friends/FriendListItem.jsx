@@ -18,7 +18,7 @@ const FriendListItem = ({ friend, onSelect }) => {
 
       <ListItemText
         primary={friend.username || `Friend ${friend.id}`}
-        secondary={friend.isOnline ? 'Online' : 'Offline'}
+        // secondary={friend.isOnline ? 'Online' : 'Offline'} 
       />
     </ListItem>
   );

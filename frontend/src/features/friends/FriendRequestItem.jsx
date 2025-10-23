@@ -1,21 +1,20 @@
-// Friend request item component
-// Represents a single friend request in the requests list
-import React from 'react';
-// Import Material UI components for list items
-import ListItem from '@mui/material/ListItem';
+import { ListItem, ListItemText, Button, Box } from '@mui/material';
 
-// FriendRequestItem component for individual friend request display
-// Shows requester name and accept/decline buttons
 const FriendRequestItem = ({ request, onAccept, onDecline }) => {
   return (
     <ListItem
-      style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}
+      secondaryAction={
+        <Box>
+          <Button onClick={() => onAccept(request.id)} sx={{ marginRight: '8px' }}>
+            Accept
+          </Button>
+          <Button onClick={() => onDecline(request.id)} color="error">
+            Decline
+          </Button>
+        </Box>
+      }
     >
-      <strong>{request.name}</strong>
-      <div style={{ marginTop: '8px' }}>
-        <button onClick={() => onAccept(request.id)} style={{ marginRight: '8px' }}>Accept</button>
-        <button onClick={() => onDecline(request.id)}>Decline</button>
-      </div>
+      <ListItemText primary={request.username || `Request ${request.id}`} />
     </ListItem>
   );
 };

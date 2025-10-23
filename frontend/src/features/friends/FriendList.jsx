@@ -3,24 +3,33 @@
 import React from 'react';
 // Import Material UI components for list display
 import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
 import Button from '@mui/material/Button';
-// FriendList component to show user's friends
-// Contains multiple FriendListItem components
-const FriendList = ({ friends, onStartChat = () => {} }) => {
-  const handleSelectFriend = (friendId) => {
-    onStartChat(friendId);
-  };
+
+const FriendList = ({ friends, onStartChat }) => {
   return (
     <List>
       {friends.map((friend) => (
-        <FriendListItem
+        <ListItem
           key={friend.id}
-          friend={friend}
-          onSelect={() => handleSelectFriend(friend.userid)}
-        />
+          secondaryAction={
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => onStartChat(friend.id)}
+            >
+              Start Chat
+            </Button>
+          }
+        >
+          <ListItemText
+            primary={friend.username || `Friend ${friend.id}`}
+            secondary={friend.isOnline ? 'Online' : 'Offline'}
+          />
+        </ListItem>
       ))}
     </List>
   );
-};
-
+}
 export default FriendList;

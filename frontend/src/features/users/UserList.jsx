@@ -1,36 +1,39 @@
-// User list component
-// Displays a list of users in the application
-import React from 'react';
-// Import Material UI components
-import List from '@mui/material/List';
-import Typography from '@mui/material/Typography';
-import LoadingSpinner from '../../components/common/LoadingSpinner'; //
-import ErrorMessage from '../../components/common/ErrorMessage'; //
-// 1. Import query hook
-import { useGetUsersQuery } from '../../services/apiSlice.js';
+import { List, Typography } from '@mui/material';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
+import ErrorMessage from '../../components/common/ErrorMessage';
+import { useGetUsersQuery, useSendFriendRequestMutation, useGetMeQuery } from '../../services/apiSlice.js';
+import UserListItem from './UserListItem.jsx';
 
-// UserList component to show all users
 const UserList = () => {
-  // 2. เรียกใช้ query hook
-  const { 
-    data: users, 
-    isLoading, 
-    isSuccess, 
-    isError, 
-    error 
-  } = useGetUsersQuery();
+  const { data: users, isLoading, isSuccess, isError, error } = useGetUsersQuery();
+  const { data: me } = useGetMeQuery();
+  const [sendFriendRequest, { isLoading: isSending }] = useSendFriendRequestMutation();
 
-  // 3. จัดการ State ต่างๆ
+  const handleSendRequest = async (targetid) => {
+    try {
+      await sendFriendRequest({ targetid }).unwrap();
+      alert('Friend request sent!');
+    } catch (err) {
+      console.error('Failed to send request:', err);
+      alert(err.data?.message || 'Failed to send request');
+    }
+  };
+
   let content;
   if (isLoading) {
     content = <LoadingSpinner />;
   } else if (isSuccess) {
+    const otherUsers = users.filter((user) => me && user.id !== me.id);
+
     content = (
       <List>
-        {users.map((user) => (
-          <div key={user.id} style={{ padding: '8px' }}>
-            {user.username} ({user.originallang})
-          </div>
+        {otherUsers.map((user) => (
+          <UserListItem
+            key={user.id}
+            user={user}
+            onSendRequest={handleSendRequest}
+            isSending={isSending}
+          />
         ))}
       </List>
     );
@@ -38,12 +41,7 @@ const UserList = () => {
     content = <ErrorMessage message={error.toString()} />;
   }
 
-  return (
-    <div>
-      <Typography variant="h5">All Users</Typography>
-      {content}
-    </div>
-  );
+  return <div>{content}</div>;
 };
 
 export default UserList;
