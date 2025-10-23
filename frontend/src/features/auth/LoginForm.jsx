@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { TextField, Button, Box, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 // 1. Import hook จาก apiSlice
@@ -14,7 +14,7 @@ const LoginForm = () => {
 
   // 2. เรียกใช้ mutation hook
   // RTK Query จะคืนค่า state ต่างๆ มาให้ (isLoading, isError, error)
-  const [login, { isLoading, isError, error, isSuccess, data }] = useLoginMutation();
+  const [login, { isLoading, isError, error }] = useLoginMutation();
 
   const handleChange = (e) => {
     setFormData({

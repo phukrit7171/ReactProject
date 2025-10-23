@@ -3,20 +3,23 @@
 import React from 'react';
 // Import Material UI components for list items
 import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import Button from '@mui/material/Button';
 
-// FriendListItem component for individual friend display
-// Shows friend name, status, and other relevant information
 const FriendListItem = ({ friend, onSelect }) => {
   return (
     <ListItem
-      button
-      onClick={() => onSelect(friend.id)}
-      style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}
+      secondaryAction={
+        <Button variant="outlined" size="small" onClick={onSelect}>
+          Start Chat
+        </Button>
+      }
     >
-      <strong>{friend.name}</strong>
-      <span style={{ fontSize: '0.9em', color: friend.isOnline ? 'green' : 'red' }}>
-        {friend.isOnline ? 'Online' : 'Offline'}
-      </span>
+
+      <ListItemText
+        primary={friend.username || `Friend ${friend.id}`}
+        secondary={friend.isOnline ? 'Online' : 'Offline'}
+      />
     </ListItem>
   );
 };
