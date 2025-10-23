@@ -4,4 +4,9 @@ import React from 'react';
 // Import registration form component
 import RegisterForm from '../features/auth/RegisterForm.jsx';
 
-// RegisterPage component for user registration
+
+const RegisterPage = () => {
+  return <RegisterForm />;
+};
+
+export default RegisterPage;

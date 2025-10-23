@@ -6,3 +6,12 @@ import ListItem from '@mui/material/ListItem';
 
 // UserListItem component for individual user display
 // Shows user name, status, and other relevant information
+const UserListItem = ({ user }) => {
+  return (
+    <ListItem>
+      {user.name} {user.isOnline ? '(Online)' : '(Offline)'}
+    </ListItem>
+  );
+};
+
+export default UserListItem;

@@ -5,3 +5,8 @@ import React from 'react';
 import SettingsForm from '../features/users/SettingsForm.jsx';
 
 // SettingsPage component for user profile and preferences
+const SettingsPage = () => {
+  return <SettingsForm />;
+};
+
+export default SettingsPage;

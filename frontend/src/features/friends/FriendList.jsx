@@ -6,3 +6,16 @@ import List from '@mui/material/List';
 
 // FriendList component to show user's friends
 // Contains multiple FriendListItem components
+const FriendList = ({ friends }) => {
+  return (
+    <List>
+      {friends.map((friend) => (
+        <div key={friend.id} style={{ padding: '8px' }}>
+          {friend.name}
+        </div>
+      ))}
+    </List>
+  );
+};
+
+export default FriendList;

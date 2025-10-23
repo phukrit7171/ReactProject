@@ -8,3 +8,17 @@ import { Navigate } from 'react-router-dom';
 
 // ProtectedRoute component to restrict access to authenticated users
 // Redirects unauthenticated users to login page
+const ProtectedRoute = ({ children }) => {
+  // Example authentication check (replace with real auth logic)
+  const isAuthenticated = Boolean(localStorage.getItem('authToken'));
+
+  // If not authenticated, redirect to login page
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // If authenticated, render the child components
+  return children;
+};
+
+export default ProtectedRoute;

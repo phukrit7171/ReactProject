@@ -5,3 +5,8 @@ import React from 'react';
 import LoginForm from '../features/auth/LoginForm.jsx';
 
 // LoginPage component for user login
+const LoginPage = () => {
+  return <LoginForm />;
+};
+
+export default LoginPage;

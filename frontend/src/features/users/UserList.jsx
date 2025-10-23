@@ -6,3 +6,16 @@ import List from '@mui/material/List';
 
 // UserList component to show all users
 // Contains multiple UserListItem components
+const UserList = ({ users }) => {
+  return (
+    <List>
+      {users.map((user) => (
+        <div key={user.id} style={{ padding: '8px' }}>
+          {user.name}
+        </div>
+      ))}
+    </List>
+  );
+};
+
+export default UserList;

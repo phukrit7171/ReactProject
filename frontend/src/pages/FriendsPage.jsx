@@ -6,3 +6,13 @@ import FriendList from '../features/friends/FriendList.jsx';
 import FriendRequestList from '../features/friends/FriendRequestList.jsx';
 
 // FriendsPage component for the main friends interface
+const FriendsPage = () => {
+  return (
+    <div style={{ display: 'flex', height: '100%' }}>
+      <FriendRequestList />
+      <FriendList />
+    </div>
+  );
+};
+
+export default FriendsPage;

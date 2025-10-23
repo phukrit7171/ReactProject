@@ -6,3 +6,12 @@ import ListItem from '@mui/material/ListItem';
 
 // Message component for displaying individual chat messages
 // Shows sender, content, and timestamp of a message
+const Message = ({ sender, text, timestamp }) => {
+  return (
+    <ListItem>
+      <strong>{sender}:</strong> {text} <em style={{ marginLeft: '8px', fontSize: '0.8em', color: '#888' }}>{new Date(timestamp).toLocaleTimeString()}</em>
+    </ListItem>
+  );
+};
+
+export default Message;
