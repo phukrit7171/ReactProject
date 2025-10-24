@@ -1,7 +1,7 @@
 // Main entry point for the React application
 // Wraps the App component with necessary providers
 // Import React and ReactDOM for rendering the application
-import React from 'react'
+import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 // Import the main App component
 import App from './App.jsx'
@@ -16,9 +16,9 @@ import store from './store/store.js' // Example Redux store import
 // Wrap with StrictMode for development checks
 // Optionally wrap with Redux Provider if using Redux
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
+  <StrictMode>
     <Provider store={store}>
       <App />
     </Provider>
-  </React.StrictMode>
+  </StrictMode>
 )
