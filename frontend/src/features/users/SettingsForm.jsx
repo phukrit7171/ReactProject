@@ -1,27 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Button, Box, Typography } from '@mui/material';
-// 1. Import the hooks
+import { TextField, Button, Box, Typography, Alert } from '@mui/material';
 import { useGetMeQuery, useUpdateUserMutation } from '../../services/apiSlice.js';
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 
 const SettingsForm = () => {
-  // 2. Call the query hook to get current user data
-  const { data: currentUser, isLoading: isLoadingMe, isError } = useGetMeQuery();
+  const { data: currentUser, isLoading: isLoadingMe, isError, error } = useGetMeQuery();
+  const [updateUser, { isLoading: isUpdating, isSuccess, isError: isUpdateError, error: updateError }] =
+    useUpdateUserMutation();
 
-  // 3. Call the mutation hook for updating
-  const [updateUser, { isLoading: isUpdating, isSuccess }] = useUpdateUserMutation();
+  const [formData, setFormData] = useState({ username: '', originallang: '' });
+  const [successMessage, setSuccessMessage] = useState('');
 
-  const [formData, setFormData] = useState({
-    username: '',
-    originallang: '',
-  });
-
-  // 4. Populate form when 'currentUser' data arrives
   useEffect(() => {
     if (currentUser) {
       setFormData({
-        username: currentUser.username,
-        originallang: currentUser.originallang,
+        username: currentUser.username || '',
+        originallang: currentUser.originallang || '',
       });
     }
   }, [currentUser]);
@@ -31,27 +25,55 @@ const SettingsForm = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      // 5. Call the mutation
-      await updateUser({ id: currentUser.id, ...formData }).unwrap();
-    } catch (err) {
-      console.error('Failed to update settings:', err);
-    }
-  };
+  e.preventDefault();
 
-  // 6. Handle loading and error states
+  const userId = currentUser?.id || currentUser?._id || currentUser?.userid; // ✅ เพิ่มกรณีนี้
+  if (!userId) {
+    console.error('No user ID found in currentUser:', currentUser);
+    return alert('User data not loaded yet. Please wait.');
+  }
+
+  console.log("Submitting update for user:", currentUser);
+
+  try {
+    await updateUser({ id: userId, ...formData }).unwrap();
+    setSuccessMessage('Settings saved successfully!');
+    setTimeout(() => setSuccessMessage(''), 3000);
+  } catch (err) {
+    console.error('Failed to update settings:', err);
+  }
+};
+
+
   if (isLoadingMe) return <LoadingSpinner />;
-  if (isError) return <Typography color="error">Error loading user data.</Typography>;
+  if (isError) {
+    console.error('Failed to load user:', error);
+    return <Typography color="error">Error loading user data. Please refresh.</Typography>;
+  }
 
   return (
     <Box
       component="form"
       onSubmit={handleSubmit}
-      sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '400px', margin: '0 auto', mt: 5 }}
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+        width: '400px',
+        margin: '0 auto',
+        mt: 5,
+        p: 3,
+        boxShadow: 3,
+        borderRadius: 2,
+        bgcolor: 'background.paper',
+      }}
       noValidate
       autoComplete="off"
     >
+      <Typography variant="h5" textAlign="center" mb={2}>
+        ⚙️ User Settings
+      </Typography>
+
       <TextField
         label="Username"
         name="username"
@@ -60,6 +82,7 @@ const SettingsForm = () => {
         disabled={isUpdating}
         required
       />
+
       <TextField
         label="Original Language (e.g., th, en)"
         name="originallang"
@@ -68,12 +91,25 @@ const SettingsForm = () => {
         disabled={isUpdating}
         required
       />
-      {isSuccess && (
-        <Typography color="primary" variant="body2" textAlign="center">
-          Settings saved successfully!
-        </Typography>
+
+      {successMessage && (
+        <Alert severity="success" sx={{ textAlign: 'center' }}>
+          {successMessage}
+        </Alert>
       )}
-      <Button variant="contained" color="primary" type="submit" disabled={isUpdating}>
+
+      {isUpdateError && (
+        <Alert severity="error" sx={{ textAlign: 'center' }}>
+          {updateError?.data?.message || ' Failed to save settings. Please try again.'}
+        </Alert>
+      )}
+
+      <Button
+        variant="contained"
+        color="primary"
+        type="submit"
+        disabled={isUpdating || !currentUser}
+      >
         {isUpdating ? 'Saving...' : 'Save Settings'}
       </Button>
     </Box>

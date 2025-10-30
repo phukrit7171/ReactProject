@@ -1,47 +1,35 @@
-import { List, Typography } from '@mui/material';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
-import ErrorMessage from '../../components/common/ErrorMessage';
-import { useGetUsersQuery, useSendFriendRequestMutation, useGetMeQuery } from '../../services/apiSlice.js';
-import UserListItem from './UserListItem.jsx';
+import React, { useEffect, useState } from 'react';
+import { List, CircularProgress } from '@mui/material';
+import { API_ENDPOINTS } from '../../constants/apiConfig';
 
 const UserList = () => {
-  const { data: users, isLoading, isSuccess, isError, error } = useGetUsersQuery();
-  const { data: me } = useGetMeQuery();
-  const [sendFriendRequest, { isLoading: isSending }] = useSendFriendRequestMutation();
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleSendRequest = async (targetid) => {
-    try {
-      await sendFriendRequest({ targetid }).unwrap();
-      alert('Friend request sent!');
-    } catch (err) {
-      console.error('Failed to send request:', err);
-      alert(err.data?.message || 'Failed to send request');
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        const res = await fetch(`${API_ENDPOINTS.BASE_URL}${API_ENDPOINTS.USERS.GET_ALL}`);
+        const data = await res.json();
+        setUsers(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     }
-  };
+    fetchUsers();
+  }, []);
 
-  let content;
-  if (isLoading) {
-    content = <LoadingSpinner />;
-  } else if (isSuccess) {
-    const otherUsers = users.filter((user) => me && user.id !== me.id);
+  if (loading) return <CircularProgress />;
 
-    content = (
-      <List>
-        {otherUsers.map((user) => (
-          <UserListItem
-            key={user.id}
-            user={user}
-            onSendRequest={handleSendRequest}
-            isSending={isSending}
-          />
-        ))}
-      </List>
-    );
-  } else if (isError) {
-    content = <ErrorMessage message={error.toString()} />;
-  }
-
-  return <div>{content}</div>;
+  return (
+    <List>
+      {users.map((user) => (
+        <div key={user.id}>{user.username}</div>
+      ))}
+    </List>
+  );
 };
 
 export default UserList;
