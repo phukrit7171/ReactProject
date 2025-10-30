@@ -1,0 +1,87 @@
+name: devstack
+services:
+  db:
+    image: docker.io/library/postgres:alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-DatabaseTranslateChat}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-1234}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data:Z
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-DatabaseTranslateChat}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: docker.io/library/node:lts-alpine
+    working_dir: /usr/src/app
+    # Enable pnpm via Corepack, persist store, install once, then run dev (nodemon)
+    command: >
+      sh -c "
+        corepack enable &&
+        corepack prepare pnpm@latest --activate &&
+        export PNPM_HOME=/pnpm &&
+        export PNPM_STORE_DIR=/pnpm/store &&
+        pnpm config set store-dir /pnpm/store &&
+        pnpm install &&
+        pnpm dev
+      "
+    environment:
+      NODE_ENV: development
+      PNPM_STORE_DIR: /pnpm/store
+      DB_NAME: ${DB_NAME:-DatabaseTranslateChat}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-1234}
+      DB_HOST: db
+      DB_PORT: ${DB_PORT:-5432}
+      SECRET_KEY: ${SECRET_KEY:-MY_SECRET_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/usr/src/app:Z
+      - /usr/src/app/node_modules
+      - pnpm-store:/pnpm/store
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
+
+  frontend:
+    image: docker.io/library/node:lts-alpine
+    working_dir: /usr/src/app
+    # Enable pnpm via Corepack, persist store, install once, then run vite dev with SWC plugin
+    command: >
+      sh -c "
+        corepack enable &&
+        corepack prepare pnpm@latest --activate &&
+        export PNPM_HOME=/pnpm &&
+        export PNPM_STORE_DIR=/pnpm/store &&
+        pnpm config set store-dir /pnpm/store &&
+        pnpm install &&
+        pnpm dev -- --host 0.0.0.0 --port 3000
+      "
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: http://localhost:3001
+      PNPM_STORE_DIR: /pnpm/store
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/usr/src/app:Z
+      - /usr/src/app/node_modules
+      - pnpm-store:/pnpm/store
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+volumes:
+  db-data: {}
+  pnpm-store: {}
