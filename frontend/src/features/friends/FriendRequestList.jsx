@@ -1,4 +1,3 @@
-// FriendRequestList.jsx
 import React from "react";
 import FriendRequestItem from "./FriendRequestItem";
 

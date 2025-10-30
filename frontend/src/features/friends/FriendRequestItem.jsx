@@ -1,20 +1,27 @@
-// FriendRequestItem.jsx
 import React from "react";
 import { Card, CardContent, Typography, Button, Box } from "@mui/material";
 import axios from "axios";
+import { getToken } from "../utils/tokenStorage"; // import getToken
 
-const FriendRequestItem = ({ request, type }) => {  
+const FriendRequestItem = ({ request, type }) => {
   const handleRespond = async (response) => {
     try {
-      const token = localStorage.getItem("token");
+      // ดึง token จาก tokenStorage
+      const token = getToken();
+      if (!token) {
+        alert("No token found. Please log in again.");
+        return;
+      }
+
       await axios.put(
-        `http://localhost:3000/friend/response/${request.friendshipid}`,
+        `http://localhost:3001/v1/friend/response/${request.friendshipid}`,
         { response },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       alert(`Request ${response === "accept" ? "accepted" : "declined"}!`);
     } catch (err) {
       console.error(err);
+      alert("Failed to respond to request. Check console for details.");
     }
   };
 
@@ -25,7 +32,7 @@ const FriendRequestItem = ({ request, type }) => {
 
         {type === "received" ? (
           <Box>
-            <Button size="small" color="success" onClick={() => handleRespond("accept")}>
+            <Button size="small" color="success" onClick={() => handleRespond("accept")} sx={{ mr: 1 }}>
               Accept
             </Button>
             <Button size="small" color="error" onClick={() => handleRespond("decline")}>

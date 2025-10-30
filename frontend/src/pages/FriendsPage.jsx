@@ -1,9 +1,9 @@
-// ✅ FriendsPage.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Box, Typography, FormControl, Select, MenuItem } from "@mui/material";
 import FriendList from "../features/friends/FriendList";
 import FriendRequestList from "../features/friends/FriendRequestList";
+import { getToken, clearToken } from "../utils/tokenStorage";
 
 const FriendsPage = () => {
   const [view, setView] = useState("friends");
@@ -14,9 +14,17 @@ const FriendsPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:3000/v1/friends/status/me", {
-          headers: { Authorization: `Bearer ${token}` },
+        // ดึง token จาก tokenStorage
+        const token = getToken();
+        if (!token) {
+          console.error("No token found. User might not be logged in.");
+          return;
+        }
+
+        const res = await axios.get("http://localhost:3001/v1/friend/status/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
 
         setFriends(res.data.friends);
@@ -24,15 +32,21 @@ const FriendsPage = () => {
         setPendingReceived(res.data.pendingReceived);
       } catch (error) {
         console.error("Error fetching friend status:", error);
+        // ถ้า token หมดอายุหรือต้อง login ใหม่
+        if (error.response && error.response.status === 401) {
+          clearToken(); // ล้าง token
+          window.location.href = "/login"; // redirect ไปหน้า login
+        }
       }
     };
+
     fetchData();
   }, []);
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mt: 4 }}>
       <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-        <Typography variant="h5" sx={{ mb: 2 }}>
+        <Typography variant="h5" sx={{ mb: 2, paddingRight: 1 }}>
           Friends
         </Typography>
 
