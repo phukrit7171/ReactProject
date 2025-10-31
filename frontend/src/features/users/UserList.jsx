@@ -1,33 +1,42 @@
-import React, { useEffect, useState } from 'react';
-import { List, CircularProgress } from '@mui/material';
-import { API_ENDPOINTS } from '../../constants/apiConfig';
+import React, { useEffect } from 'react';
+import { List, ListItem, ListItemText, CircularProgress, Alert } from '@mui/material';
+import { useGetUsersQuery } from '../../services/apiSlice';
 
 const UserList = () => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Use RTK Query hook to fetch users and leverage Redux cache
+  const {
+    data: users = [],
+    isLoading,
+    isError,
+    error,
+  } = useGetUsersQuery();
 
+  // Debug: log users payload and fetch status to help diagnose shape/contents
   useEffect(() => {
-    async function fetchUsers() {
-      try {
-        const res = await fetch(`${API_ENDPOINTS.BASE_URL}${API_ENDPOINTS.USERS.GET_ALL}`);
-        const data = await res.json();
-        setUsers(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+    if (!isLoading) {
+      // eslint-disable-next-line no-console
+      console.debug('UserList: fetch result', { isLoading, isError, error, users });
     }
-    fetchUsers();
-  }, []);
+  }, [users, isLoading, isError, error]);
 
-  if (loading) return <CircularProgress />;
+  if (isLoading) return <CircularProgress />;
+  if (isError) {
+    const message = error?.data?.message ?? error?.error ?? 'Failed to load users';
+    return <Alert severity="error">{message}</Alert>;
+  }
+  if (!users || users.length === 0) return <Alert severity="info">No users found</Alert>;
 
   return (
     <List>
-      {users.map((user) => (
-        <div key={user.id}>{user.username}</div>
-      ))}
+      {users.map((user, idx) => {
+        // Use a stable unique key when possible, fall back to index as last resort
+        const key = user?.id ?? user?._id ?? user?.username ?? idx;
+        return (
+          <ListItem key={String(key)}>
+            <ListItemText primary={user?.username ?? 'Unknown user'} />
+          </ListItem>
+        );
+      })}
     </List>
   );
 };

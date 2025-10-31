@@ -29,13 +29,10 @@ const { friends, requests } = useMemo(() => {
     const friends = [];
     const requests = [];
     if (friendStatus) {
-      friendStatus.forEach((item) => {
-        if (item.status === 'accepted') {
-          friends.push(item);
-        } else if (item.status === 'pending') {
-          requests.push(item);
-        }
-      });
+      // Handle accepted friends
+      friends.push(...(friendStatus.friends || []));
+      // Handle pending requests (both sent and received)
+      requests.push(...(friendStatus.pendingReceived || []));
     }
     return { friends, requests };
   }, [friendStatus]);

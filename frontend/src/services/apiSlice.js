@@ -1,99 +1,143 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { API_ENDPOINTS } from '../constants/apiConfig'; //
-import { getToken } from '../utils/tokenStorage'; //
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { API_ENDPOINTS } from "../constants/apiConfig";
+import { getToken } from "../utils/tokenStorage";
 
 // สร้าง API service หลัก
 export const apiSlice = createApi({
   // ชื่อของ reducer (default คือ 'api')
-  reducerPath: 'api',
-  
+  reducerPath: "api",
+
   // ตั้งค่า baseQuery ที่จะใช้กับทุก endpoint
   baseQuery: fetchBaseQuery({
-    baseUrl: API_ENDPOINTS.BASE_URL, //
+    baseUrl: API_ENDPOINTS.BASE_URL,
     // เตรียม header ก่อนส่ง request ทุกครั้ง
     prepareHeaders: (headers) => {
-      const token = getToken(); //
+      const token = getToken();
       if (token) {
-        // สมมติว่า Backend ใช้ Bearer Token
-        headers.set('Authorization', `Bearer ${token}`);
+        // Set Header Authorization Bearer Token
+        headers.set("Authorization", `Bearer ${token}`);
       }
       return headers;
     },
   }),
 
   // 'tagTypes' ใช้สำหรับ Caching - เพื่อบอกว่าข้อมูลประเภทไหนควรจะ "invalidate"
-  tagTypes: ['User', 'Chatroom', 'Message', 'Friend'],
+  tagTypes: ["User", "Chatroom", "Message", "Friend"],
 
   // 'endpoints' คือที่ที่เราจะกำหนด API ทั้งหมด
   endpoints: (builder) => ({
-    
     // === Authentication ===
     signup: builder.mutation({
       query: (userData) => ({
         url: API_ENDPOINTS.AUTH.SIGNUP,
-        method: 'POST',
+        method: "POST",
         body: userData, // { username, password, originallang }
       }),
     }),
     login: builder.mutation({
       query: (credentials) => ({
         url: API_ENDPOINTS.AUTH.LOGIN,
-        method: 'POST',
+        method: "POST",
         body: credentials, // { username, password }
       }),
     }),
     logout: builder.mutation({
       query: () => ({
         url: API_ENDPOINTS.AUTH.LOGOUT,
-        method: 'POST',
+        method: "POST",
       }),
     }),
 
     // === Users ===
     getUsers: builder.query({
       query: () => API_ENDPOINTS.USERS.GET_ALL,
-      providesTags: (result) => 
-        result ? [
-          ...result.map(({ id }) => ({ type: 'User', id })),
-          { type: 'User', id: 'LIST' },
-        ] : [{ type: 'User', id: 'LIST' }],
+      // Normalize response so every user has an `id` and `username` field
+      transformResponse: (response) => {
+        if (!Array.isArray(response)) return response;
+        return response.map((u) => ({
+          id: u.userid, // API ส่ง userid มา
+          username: u.username,
+          originallang: u.originallang,
+          ...u,
+        }));
+      },
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: "User", id })),
+              { type: "User", id: "LIST" },
+            ]
+          : [{ type: "User", id: "LIST" }],
     }),
     getMe: builder.query({
       query: () => API_ENDPOINTS.USERS.GET_ME,
-      providesTags: (result) => result ? [{ type: 'User', id: result.id }] : [],
+      transformResponse: (response) => {
+        if (!response) return null;
+        return {
+          id: response.userid,
+          username: response.username,
+          originallang: response.originallang,
+          ...response,
+        };
+      },
+      providesTags: (result) =>
+        result ? [{ type: "User", id: result.id }] : [],
     }),
     updateUser: builder.mutation({
       query: ({ id, ...patch }) => ({
         url: API_ENDPOINTS.USERS.UPDATE(id),
-        method: 'PUT',
+        method: "PUT",
         body: patch, // { username, originallang }
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'User', id }],
+      invalidatesTags: (result, error, { id }) => [{ type: "User", id }],
     }),
     deleteUser: builder.mutation({
       query: (id) => ({
         url: API_ENDPOINTS.USERS.DELETE(id),
-        method: 'DELETE',
+        method: "DELETE",
       }),
-      invalidatesTags: (result, error, id) => [{ type: 'User', id }],
+      invalidatesTags: (result, error, id) => [{ type: "User", id }],
     }),
 
     // === Chatrooms ===
     getChatrooms: builder.query({
       query: () => API_ENDPOINTS.CHATROOMS.GET_ALL,
+      transformResponse: (response) => {
+        if (!Array.isArray(response)) return response;
+        return response.map((room, idx) => ({
+          id: room.id ?? room._id ?? `room-${idx}`,
+          name: room.name ?? room.title ?? `Chat ${idx + 1}`,
+          members: Array.isArray(room.members) ? room.members.map(member => ({
+            id: member.id ?? member._id,
+            username: member.username ?? member.name ?? 'Unknown User',
+            ...member,
+          })) : [],
+          lastMessage: room.lastMessage ? {
+            id: room.lastMessage.id ?? room.lastMessage._id,
+            text: room.lastMessage.text ?? room.lastMessage.content ?? '',
+            senderId: room.lastMessage.senderId ?? room.lastMessage.userId,
+            timestamp: room.lastMessage.timestamp ?? room.lastMessage.createdAt,
+            ...room.lastMessage,
+          } : null,
+          ...room,
+        }));
+      },
       providesTags: (result) =>
-        result ? [
-          ...result.map(({ id }) => ({ type: 'Chatroom', id })),
-          { type: 'Chatroom', id: 'LIST' },
-        ] : [{ type: 'Chatroom', id: 'LIST' }],
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: "Chatroom", id })),
+              { type: "Chatroom", id: "LIST" },
+            ]
+          : [{ type: "Chatroom", id: "LIST" }],
     }),
     createChatroom: builder.mutation({
-      query: (body) => ({ // body: { targetuserid }
+      query: (body) => ({
+        // body: { targetuserid }
         url: API_ENDPOINTS.CHATROOMS.CREATE,
-        method: 'POST',
+        method: "POST",
         body,
       }),
-      invalidatesTags: [{ type: 'Chatroom', id: 'LIST' }],
+      invalidatesTags: [{ type: "Chatroom", id: "LIST" }],
     }),
 
     // === Messages ===
@@ -103,47 +147,97 @@ export const apiSlice = createApi({
         url: API_ENDPOINTS.MESSAGES.GET_BY_ROOM(id),
         params: { filter },
       }),
-      providesTags: (result, error, { id }) => [{ type: 'Message', id: `ROOM_${id}` }],
+      transformResponse: (response) => {
+        if (!Array.isArray(response)) return response;
+        return response.map((msg, idx) => ({
+          id: msg.id ?? msg._id ?? `msg-${Date.now()}-${idx}`,
+          roomId: msg.roomId ?? msg.chatroomId,
+          senderId: msg.senderId ?? msg.userId ?? msg.from,
+          text: msg.text ?? msg.content ?? msg.message ?? '',
+          timestamp: msg.timestamp ?? msg.createdAt ?? msg.date ?? new Date().toISOString(),
+          translatedText: msg.translatedText ?? msg.translated ?? null,
+          status: msg.status ?? 'sent',
+          ...msg,
+        }));
+      },
+      providesTags: (result, error, { id }) => [
+        { type: "Message", id: `ROOM_${id}` },
+      ],
     }),
     sendMessage: builder.mutation({
-      query: (body) => ({ // body: { originalmessage, roomid }
+      query: (body) => ({
+        // body: { originalmessage, roomid }
         url: API_ENDPOINTS.MESSAGES.CREATE,
-        method: 'POST',
+        method: "POST",
         body,
       }),
-      invalidatesTags: (result, error, { roomid }) => [{ type: 'Message', id: `ROOM_${roomid}` }],
+      invalidatesTags: (result, error, { roomid }) => [
+        { type: "Message", id: `ROOM_${roomid}` },
+      ],
     }),
 
     // === Friends ===
     getMyFriendStatus: builder.query({
       query: () => API_ENDPOINTS.FRIENDS.GET_STATUS,
-      providesTags: ['Friend'],
+      // Normalize friend data to ensure consistent shape
+      transformResponse: (response) => {
+        if (!Array.isArray(response)) return [];
+        return response.map((friendship) => ({
+          id: friendship.friendshipid ?? friendship.id,
+          status: friendship.status ?? 'pending',
+          // Normalize user data within friendship
+          user: friendship.user ? {
+            id: friendship.user.userid,
+            username: friendship.user.username,
+            originallang: friendship.user.originallang,
+            ...friendship.user,
+          } : null,
+          sender: friendship.sender ? {
+            id: friendship.sender.userid,
+            username: friendship.sender.username,
+            originallang: friendship.sender.originallang,
+            ...friendship.sender,
+          } : null,
+          receiver: friendship.receiver ? {
+            id: friendship.receiver.userid,
+            username: friendship.receiver.username,
+            originallang: friendship.receiver.originallang,
+            ...friendship.receiver,
+          } : null,
+          createdAt: friendship.createdAt ?? friendship.timestamp ?? new Date().toISOString(),
+          ...friendship,
+        }));
+      },
+      providesTags: (result) => 
+        result
+          ? [...result.map(({ id }) => ({ type: "Friend", id })), "Friend"]
+          : ["Friend"],
     }),
     sendFriendRequest: builder.mutation({
-      query: (body) => ({ // body: { targetid }
+      query: (body) => ({
+        // body: { targetid }
         url: API_ENDPOINTS.FRIENDS.REQUEST,
-        method: 'POST',
+        method: "POST",
         body,
       }),
-      invalidatesTags: ['Friend'],
+      invalidatesTags: ["Friend"],
     }),
     respondToRequest: builder.mutation({
       // arg: { friendshipid, response: 'accept' | 'decline' }
       query: ({ friendshipid, response }) => ({
         url: API_ENDPOINTS.FRIENDS.RESPOND(friendshipid),
-        method: 'PUT',
+        method: "PUT",
         body: { response },
       }),
-      invalidatesTags: ['Friend'],
+      invalidatesTags: ["Friend"],
     }),
     deleteFriend: builder.mutation({
       query: (friendshipid) => ({
         url: API_ENDPOINTS.FRIENDS.DELETE(friendshipid),
-        method: 'DELETE',
+        method: "DELETE",
       }),
-      invalidatesTags: ['Friend'],
+      invalidatesTags: ["Friend"],
     }),
-
   }),
 });
 
