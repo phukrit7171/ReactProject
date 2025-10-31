@@ -9,14 +9,12 @@ import {
   Paper,
 } from "@mui/material";
 
-import { useDispatch, useSelector } from "react-redux";
-import { registerUser } from "./authSlice";
+import { useSignupMutation } from "../../services/apiSlice";
 import { useNavigate } from "react-router-dom";
 
 export default function RegisterForm() {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error } = useSelector((state) => state.auth);
+  const [signup, { isLoading: loading, error }] = useSignupMutation();
 
   const [form, setForm] = useState({
     username: "",
@@ -30,8 +28,14 @@ export default function RegisterForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await dispatch(registerUser(form));
-    if (!res.error) navigate("/login");
+    try {
+      const res = await signup(form).unwrap();
+      // signup succeeded
+      navigate("/login");
+    } catch (err) {
+      // error will be shown from `error` returned by the mutation
+      console.error("Signup error:", err);
+    }
   };
 
   return (
@@ -99,7 +103,9 @@ export default function RegisterForm() {
 
           {error && (
             <Typography color="error" variant="body2" mt={1}>
-              {error}
+              {typeof error === "string"
+                ? error
+                : error?.data?.error ?? JSON.stringify(error)}
             </Typography>
           )}
 

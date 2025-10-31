@@ -1,23 +1,31 @@
-// Protected route component
-// Ensures that users are authenticated before accessing certain routes
-import React from 'react';
-// Import routing components from react-router-dom
 import { Navigate } from 'react-router-dom';
 // Import state from react-redux (if needed for auth state)
-import { useSelector } from 'react-redux';
+import { getToken, removeToken } from '../../utils/tokenStorage';
+import { useGetMeQuery } from '../../services/apiSlice';
+import LoadingSpinner from '../common/LoadingSpinner';
 
 // ProtectedRoute component to restrict access to authenticated users
 // Redirects unauthenticated users to login page
 const ProtectedRoute = ({ children }) => {
-  // Example authentication check (replace with real auth logic)
-  const { isAuthenticated } = useSelector((state) => state.auth);
+  // Check for stored token first to avoid unnecessary request
+  const token = getToken();
 
-  // If not authenticated, redirect to login page
-  if (!isAuthenticated) {
+  if (!token) return <Navigate to="/login" replace />;
+
+  // Validate token by calling /v1/users/me. Skip query if no token.
+  const { data, isLoading, isSuccess, isError } = useGetMeQuery(undefined, {
+    skip: !token,
+  });
+
+  if (isLoading) return <LoadingSpinner />;
+
+  // If validation failed, clear token and redirect to login
+  if (isError || !isSuccess || !data) {
+    removeToken();
     return <Navigate to="/login" replace />;
   }
 
-  // If authenticated, render the child components
+  // Token is valid
   return children;
 };
 

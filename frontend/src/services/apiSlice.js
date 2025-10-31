@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { API_ENDPOINTS } from "../constants/apiConfig";
-import { getToken } from "../utils/tokenStorage";
+import { getToken, saveToken, removeToken } from "../utils/tokenStorage";
 
 // สร้าง API service หลัก
 export const apiSlice = createApi({
@@ -8,18 +8,26 @@ export const apiSlice = createApi({
   reducerPath: "api",
 
   // ตั้งค่า baseQuery ที่จะใช้กับทุก endpoint
-  baseQuery: fetchBaseQuery({
-    baseUrl: API_ENDPOINTS.BASE_URL,
-    // เตรียม header ก่อนส่ง request ทุกครั้ง
-    prepareHeaders: (headers) => {
-      const token = getToken();
-      if (token) {
-        // Set Header Authorization Bearer Token
-        headers.set("Authorization", `Bearer ${token}`);
+  // Wrap fetchBaseQuery to automatically attach token and handle 401 by clearing it
+  baseQuery: (() => {
+    const rawBase = fetchBaseQuery({
+      baseUrl: API_ENDPOINTS.BASE_URL,
+      prepareHeaders: (headers) => {
+        const token = getToken();
+        if (token) headers.set("Authorization", `Bearer ${token}`);
+        return headers;
+      },
+    });
+
+    return async (args, api, extraOptions) => {
+      const result = await rawBase(args, api, extraOptions);
+      if (result?.error?.status === 401) {
+        // token invalid or expired — remove it locally
+        removeToken();
       }
-      return headers;
-    },
-  }),
+      return result;
+    };
+  })(),
 
   // 'tagTypes' ใช้สำหรับ Caching - เพื่อบอกว่าข้อมูลประเภทไหนควรจะ "invalidate"
   tagTypes: ["User", "Chatroom", "Message", "Friend"],
@@ -40,12 +48,33 @@ export const apiSlice = createApi({
         method: "POST",
         body: credentials, // { username, password }
       }),
+      // Save token to localStorage when login succeeds
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data?.token) {
+            saveToken(data.token);
+          }
+        } catch (err) {
+          // ignore - error handled by hook consumer
+        }
+      },
     }),
     logout: builder.mutation({
       query: () => ({
         url: API_ENDPOINTS.AUTH.LOGOUT,
         method: "POST",
       }),
+      // Remove token on successful logout
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          removeToken();
+          // optionally: dispatch(apiSlice.util.resetApiState()) if you want to clear cache
+        } catch (err) {
+          // ignore
+        }
+      },
     }),
 
     // === Users ===

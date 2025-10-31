@@ -1,14 +1,13 @@
 // src/auth/LoginForm.jsx
 import React, { useState } from "react";
 import { Box, TextField, Button, Typography, Paper } from "@mui/material";
-import { useDispatch, useSelector } from "react-redux";
-import { loginUser } from "./authSlice";
+import { useLoginMutation } from "../../services/apiSlice";
+import { saveToken } from "../../utils/tokenStorage";
 import { useNavigate } from "react-router-dom";
 
 export default function LoginForm() {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error } = useSelector((state) => state.auth);
+  const [login, { isLoading: loading, error }] = useLoginMutation();
 
   const [form, setForm] = useState({ username: "", password: "" });
 
@@ -17,8 +16,14 @@ export default function LoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await dispatch(loginUser(form));
-    if (!res.error) navigate("/");
+    try {
+      const res = await login(form).unwrap();
+      // save token and navigate
+      if (res?.token) saveToken(res.token);
+      navigate("/");
+    } catch (err) {
+      console.error("Login error:", err);
+    }
   };
 
   return (
@@ -73,7 +78,9 @@ export default function LoginForm() {
 
           {error && (
             <Typography color="error" variant="body2" mt={1}>
-              {error}
+              {typeof error === "string"
+                ? error
+                : error?.data?.error ?? JSON.stringify(error)}
             </Typography>
           )}
 
