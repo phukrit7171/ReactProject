@@ -1,89 +1,76 @@
-import React, { useMemo } from "react";
-import { Box, Typography } from "@mui/material";
-import FriendList from "../features/friends/FriendList.jsx";
-import FriendRequestList from "../features/friends/FriendRequestList.jsx";
-import UserList from "../features/users/UserList.jsx"; // 1. Import UserList
-import { useNavigate } from "react-router-dom"; // 2. Import useNavigate
-import {
-  useGetMyFriendStatusQuery,
-  useRespondToRequestMutation,
-  useCreateChatroomMutation,
-} from "../services/apiSlice.js";
-import LoadingSpinner from "../components/common/LoadingSpinner.jsx";
+import React, { useState } from "react";
+import { Box, FormControl, Select, MenuItem, Typography, CircularProgress } from "@mui/material";
+import FriendList from "../features/friends/FriendList";
+import FriendRequestList from "../features/friends/FriendRequestList";
+import { useGetMyFriendStatusQuery } from "../services/apiSlice"; 
 
 const FriendsPage = () => {
-  const navigate = useNavigate();
-  // 2. Call the query hook
-  const {
-    data: friendStatus,
-    isLoading,
-    isError,
-  } = useGetMyFriendStatusQuery(undefined, { pollingInterval: 15000 });
+  const [view, setView] = useState("friends");
 
-  // 3. Call the mutation hook
-  const [respondToRequest] = useRespondToRequestMutation();
-  const [createChatroom] = useCreateChatroomMutation();
+  // ดึงข้อมูลเพื่อนทั้งหมด (RTK Query ทำให้ useEffect ไม่จำเป็น)
+  const { data, error, isLoading, isError, refetch } = useGetMyFriendStatusQuery();
 
-  // 4. Filter the data into two lists
-const { friends, requests } = useMemo(() => {
-    const friends = [];
-    const requests = [];
-    if (friendStatus) {
-      friendStatus.forEach((item) => {
-        if (item.status === 'accepted') {
-          friends.push(item);
-        } else if (item.status === 'pending') {
-          requests.push(item);
-        }
-      });
-    }
-    return { friends, requests };
-  }, [friendStatus]);
+  // ป้องกันกรณีที่ data ยังไม่มา
+  const friends = data?.friends || [];
+  const sending = data?.pendingSent || [];
+  const response = data?.pendingReceived || [];
 
-  const handleRespond = async (friendshipid, response) => {
-    try {
-      await respondToRequest({ friendshipid, response }).unwrap();
-    } catch (err) {
-      console.error('Failed to respond to request:', err);
-    }
-  };
+  if (isLoading) {
+    return (
+      <Box sx={{ mt: 6, textAlign: "center" }}>
+        <CircularProgress />
+        <Typography>Loading friends...</Typography>
+      </Box>
+    );
+  }
 
-  // 7. สร้างฟังก์ชัน handleStartChat
-  const handleStartChat = async (targetuserid) => {
-    try {
-      // เรียก API `POST /v1/chatrooms`
-      await createChatroom({ targetuserid }).unwrap();
-      // ถ้าสำเร็จ ให้เด้งไปหน้า Chat
-      navigate('/');
-    } catch (err) {
-      console.error('Failed to create chatroom:', err);
-      alert(err.data?.message || 'Failed to start chat');
-    }
-  };
-
-  if (isLoading) return <LoadingSpinner />;
-  if (isError) return <Typography color="error">Error loading friends.</Typography>;
+  if (isError) {
+    return (
+      <Box sx={{ mt: 6, textAlign: "center", color: "red" }}>
+        <Typography>Error: {error?.data?.message || "Failed to load friends"}</Typography>
+        <Typography
+          sx={{ textDecoration: "underline", cursor: "pointer" }}
+          onClick={refetch}
+        >
+          Retry
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
-    <Box sx={{ display: 'flex', height: '100%', gap: 3 }}>
-      {/* 8. ปรับ Layout ใหม */}
-      <Box sx={{ width: '33%' }}>
-        <Typography variant="h5">Friend Requests</Typography>
-        <FriendRequestList
-          requests={requests}
-          onAccept={(id) => handleRespond(id, 'accept')}
-          onDecline={(id) => handleRespond(id, 'decline')}
-        />
-      </Box>
-      <Box sx={{ width: '33%' }}>
-        <Typography variant="h5">My Friends</Typography>  
-        <FriendList friends={friends} onStartChat={handleStartChat} />
-      </Box>
-      <Box sx={{ width: '33%', borderLeft: '1px solid #ccc', pl: 2 }}>
-        <Typography variant="h5">Find Users</Typography>
-        <UserList />
+    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mt: 4 }}>
+      <FormControl size="small" sx={{ mb: 3 }}>
+        <Select
+          value={view}
+          onChange={(e) => setView(e.target.value)}
+          sx={{
+            fontSize: "1.5rem",
+            minWidth: 150,
+          }}
+        >
+          <MenuItem value="friends" sx={{ fontSize: "1.1rem" }}>Friends</MenuItem>
+          <MenuItem value="response" sx={{ fontSize: "1.1rem" }}>Responses</MenuItem>
+          <MenuItem value="sending" sx={{ fontSize: "1.1rem" }}>Sending</MenuItem>
+        </Select>
+      </FormControl>
+
+      <Box
+        sx={{
+          width: "400px",
+          border: "1px solid #ddd",
+          borderRadius: 2,
+          p: 2,
+          boxShadow: 1,
+          backgroundColor: "white",
+        }}
+      >
+        {view === "friends" && <FriendList friends={friends} />}
+        {view === "response" && <FriendRequestList requests={response} type="received" />}
+        {view === "sending" && <FriendRequestList requests={sending} type="sent" />}
       </Box>
     </Box>
   );
 };
+
 export default FriendsPage;

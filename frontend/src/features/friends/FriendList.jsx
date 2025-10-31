@@ -1,35 +1,37 @@
-// Friend list component
-// Displays a list of the user's friends
-import React from 'react';
-// Import Material UI components for list display
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import Button from '@mui/material/Button';
+import React from "react";
+import { Card, CardContent, Typography, Button, Box } from "@mui/material";
+import { useDeleteFriendMutation } from "../../services/apiSlice";
 
-const FriendList = ({ friends, onStartChat }) => {
+const FriendList = ({ friends }) => {
+  const [deleteFriend] = useDeleteFriendMutation();
+
+  if (!friends.length) return <Typography>No friends yet.</Typography>;
+
+  const currentUser = localStorage.getItem("username") || "alice";
+
   return (
-    <List>
-      {friends.map((friend) => (
-        <ListItem
-          key={friend.id}
-          secondaryAction={
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => onStartChat(friend.id)}
-            >
-              Start Chat
-            </Button>
-          }
-        >
-          <ListItemText
-            primary={friend.username || `Friend ${friend.id}`}
-            secondary={friend.isOnline ? 'Online' : 'Offline'}
-          />
-        </ListItem>
-      ))}
-    </List>
+    <Box sx={{ p: 2 }}>
+      {friends.map((f) => {
+        const friendName = f.sender.username === currentUser ? f.receiver.username : f.sender.username;
+
+        return (
+          <Card key={f.friendshipid} sx={{ mb: 2, boxShadow: 2 }}>
+            <CardContent sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <Typography sx={{ fontSize: 16, fontWeight: 500 }}>{friendName}</Typography>
+              <Button
+                variant="contained"
+                color="error"
+                size="small"
+                onClick={() => deleteFriend(f.friendshipid)}
+              >
+                Delete
+              </Button>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </Box>
   );
-}
+};
+
 export default FriendList;

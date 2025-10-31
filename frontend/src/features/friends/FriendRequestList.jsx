@@ -1,28 +1,15 @@
-import React from 'react';
-import List from '@mui/material/List';
-import Button from '@mui/material/Button';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import FriendRequestItem from './FriendRequestItem.jsx';
+import React from "react";
+import FriendRequestItem from "./FriendRequestItem";
 
-const FriendRequestList = ({ requests = [], onAccept, onDecline }) => {
-  if (requests.length === 0) {
-    return <Typography>No pending friend requests.</Typography>;
-  }
-  
+const FriendRequestList = ({ requests, type }) => {
+  if (!requests.length) return <p>No requests.</p>;
+
   return (
-    <List>
-      {requests.map((request) => (
-        <FriendRequestItem
-          key={request.id}
-          request={request}
-          onAccept={onAccept}
-          onDecline={onDecline}
-        />
+    <div>
+      {requests.map((r) => (
+        <FriendRequestItem key={r.friendshipid} request={r} type={type} />
       ))}
-    </List>
+    </div>
   );
 };
 
