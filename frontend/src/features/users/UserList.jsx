@@ -1,47 +1,44 @@
-import { List, Typography } from '@mui/material';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
-import ErrorMessage from '../../components/common/ErrorMessage';
-import { useGetUsersQuery, useSendFriendRequestMutation, useGetMeQuery } from '../../services/apiSlice.js';
-import UserListItem from './UserListItem.jsx';
+import React, { useEffect } from 'react';
+import { List, ListItem, ListItemText, CircularProgress, Alert } from '@mui/material';
+import { useGetUsersQuery } from '../../services/apiSlice';
 
 const UserList = () => {
-  const { data: users, isLoading, isSuccess, isError, error } = useGetUsersQuery();
-  const { data: me } = useGetMeQuery();
-  const [sendFriendRequest, { isLoading: isSending }] = useSendFriendRequestMutation();
+  // Use RTK Query hook to fetch users and leverage Redux cache
+  const {
+    data: users = [],
+    isLoading,
+    isError,
+    error,
+  } = useGetUsersQuery();
 
-  const handleSendRequest = async (targetid) => {
-    try {
-      await sendFriendRequest({ targetid }).unwrap();
-      alert('Friend request sent!');
-    } catch (err) {
-      console.error('Failed to send request:', err);
-      alert(err.data?.message || 'Failed to send request');
+  // Debug: log users payload and fetch status to help diagnose shape/contents
+  useEffect(() => {
+    if (!isLoading) {
+      // eslint-disable-next-line no-console
+      console.debug('UserList: fetch result', { isLoading, isError, error, users });
     }
-  };
+  }, [users, isLoading, isError, error]);
 
-  let content;
-  if (isLoading) {
-    content = <LoadingSpinner />;
-  } else if (isSuccess) {
-    const otherUsers = users.filter((user) => me && user.id !== me.id);
-
-    content = (
-      <List>
-        {otherUsers.map((user) => (
-          <UserListItem
-            key={user.id}
-            user={user}
-            onSendRequest={handleSendRequest}
-            isSending={isSending}
-          />
-        ))}
-      </List>
-    );
-  } else if (isError) {
-    content = <ErrorMessage message={error.toString()} />;
+  if (isLoading) return <CircularProgress />;
+  if (isError) {
+    const message = error?.data?.message ?? error?.error ?? 'Failed to load users';
+    return <Alert severity="error">{message}</Alert>;
   }
+  if (!users || users.length === 0) return <Alert severity="info">No users found</Alert>;
 
-  return <div>{content}</div>;
+  return (
+    <List>
+      {users.map((user, idx) => {
+        // Use a stable unique key when possible, fall back to index as last resort
+        const key = user?.id ?? user?._id ?? user?.username ?? idx;
+        return (
+          <ListItem key={String(key)}>
+            <ListItemText primary={user?.username ?? 'Unknown user'} />
+          </ListItem>
+        );
+      })}
+    </List>
+  );
 };
 
 export default UserList;

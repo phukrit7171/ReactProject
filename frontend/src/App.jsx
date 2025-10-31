@@ -1,17 +1,17 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 // Import Layout
-import MainLayout from './components/layout/MainLayout.jsx'; // <--- Import Layout ใหม่
-import ProtectedRoute from './components/layout/ProtectedRoute.jsx';
+import MainLayout from "./components/layout/MainLayout.jsx"; // <--- Import Layout ใหม่
+import ProtectedRoute from "./components/layout/ProtectedRoute.jsx";
 
 // Import Pages
-import LoginPage from './pages/LoginPage.jsx';
-import RegisterPage from './pages/RegisterPage.jsx';
-import ChatPage from './pages/ChatPage.jsx';
-import FriendsPage from './pages/FriendsPage.jsx';
-import SettingsPage from './pages/SettingsPage.jsx';
-import NotFoundPage from './pages/NotFoundPage.jsx';
+import LoginPage from "./pages/LoginPage.jsx";
+import RegisterPage from "./pages/RegisterPage.jsx";
+import ChatPage from "./pages/ChatPage.jsx";
+import FriendsPage from "./pages/FriendsPage.jsx";
+import SettingsPage from "./pages/SettingsPage.jsx";
+import NotFoundPage from "./pages/NotFoundPage.jsx";
 
 const App = () => {
   return (
@@ -25,9 +25,9 @@ const App = () => {
         <Route
           path="/"
           element={
-            // <ProtectedRoute>
+            <ProtectedRoute>
               <MainLayout />
-            // </ProtectedRoute>
+            </ProtectedRoute>
           }
         >
           <Route index element={<ChatPage />} />

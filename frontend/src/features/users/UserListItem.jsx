@@ -1,24 +1,11 @@
-// User list item component
-// Represents a single user in the user list
+// UserListItem.jsx
+// Represents a single user in the list (view only)
 import React from 'react';
-// Import Material UI components for list items
-import { ListItem, ListItemText, Button } from '@mui/material';
+import { ListItem, ListItemText } from '@mui/material';
 
-const UserListItem = ({ user, onSendRequest, isSending }) => {
+const UserListItem = ({ user }) => {
   return (
-    <ListItem
-      key={user.id}
-      secondaryAction={
-        <Button
-          variant="contained"
-          size="small"
-          onClick={() => onSendRequest(user.id)}
-          disabled={isSending}
-        >
-          Send Request
-        </Button>
-      }
-    >
+    <ListItem>
       <ListItemText
         primary={user.username}
         secondary={`Language: ${user.originallang}`}
