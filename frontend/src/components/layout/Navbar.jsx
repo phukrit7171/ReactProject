@@ -2,7 +2,7 @@
 import { AppBar, Toolbar, Typography, Box, Button } from "@mui/material";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useLogoutMutation } from "../../services/apiSlice";
-import { clearToken } from "../../utils/tokenStorage";
+import { removeToken } from "../../utils/tokenStorage";
 
 // Creates a consistent navigation bar for the application
 const Navbar = () => {

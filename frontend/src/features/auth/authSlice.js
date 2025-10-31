@@ -1,65 +1,83 @@
-import { createSlice } from '@reduxjs/toolkit';
-import { apiSlice } from '../../services/apiSlice.js';
-import { getToken } from '../../utils/tokenStorage.js';
 
-// Read token from storage on initial load
-const token = getToken();
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
+import { saveToken, removeToken } from "../../utils/tokenStorage";
 
-const initialState = {
-  isAuthenticated: !!token, // Set initial auth state based on token
-  user: null,
-};
+const API_URL = "http://localhost:3001/v1/auth"; // แก้ให้ตรงกับ backend Docker port
+
+export const registerUser = createAsyncThunk(
+  "v1/auth/register",
+  async ({ username, password, originallang }, thunkAPI) => {
+    try {
+      const res = await axios.post(`${API_URL}/signup`, {
+        username,
+        password,
+        originallang,
+      });
+      return res.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
+export const loginUser = createAsyncThunk(
+  "v1/auth/login",
+  async ({ username, password }, thunkAPI) => {
+    try {
+      const res = await axios.post(`${API_URL}/login`, { username, password });
+      saveToken(res.data.token);
+      return res.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
+export const logoutUser = createAsyncThunk("v1/auth/logout", async () => {
+  removeToken();
+  return null;
+});
 
 const authSlice = createSlice({
-  name: 'auth',
-  initialState,
-  // Reducers for actions we dispatch manually
-  reducers: {
-    // We'll use this if we manually clear the token (e.g., on 401 error)
-    logout: (state) => {
-      state.isAuthenticated = false;
-      state.user = null;
-    },
+  name: "auth",
+  initialState: {
+    user: null,
+    token: null,
+    loading: false,
+    error: null,
   },
-  // extraReducers to "listen" for actions from other slices (like apiSlice)
+  reducers: {},
   extraReducers: (builder) => {
-    // When login is successful
-    builder.addMatcher(
-      apiSlice.endpoints.login.matchFulfilled,
-      (state) => {
-        // payload from login is { token: '...' }
-        state.isAuthenticated = true;
-        // Note: The token is saved in LoginForm, not in the Redux state
-      }
-    );
-    // When getMe is successful
-    builder.addMatcher(
-      apiSlice.endpoints.getMe.matchFulfilled,
-      (state, { payload }) => {
-        // payload from getMe is the user object
-        state.isAuthenticated = true;
-        state.user = payload;
-      }
-    );
-    // When logout is successful OR getMe fails (e.g., 401)
-    builder.addMatcher(
-      apiSlice.endpoints.logout.matchFulfilled,
-      (state) => {
-        state.isAuthenticated = false;
+    builder
+      .addCase(registerUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(registerUser.fulfilled, (state, action) => {
+        state.loading = false;
+      })
+      .addCase(registerUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.error;
+      })
+      .addCase(loginUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loginUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.token = action.payload.token;
+      })
+      .addCase(loginUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.error;
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
-      }
-    );
-    builder.addMatcher(
-      apiSlice.endpoints.getMe.matchRejected,
-      (state, { payload }) => {
-        if (payload?.status === 401) {
-          state.isAuthenticated = false;
-          state.user = null;
-        }
-      }
-    );
+        state.token = null;
+      });
   },
 });
 
-export const { logout } = authSlice.actions;
 export default authSlice.reducer;
