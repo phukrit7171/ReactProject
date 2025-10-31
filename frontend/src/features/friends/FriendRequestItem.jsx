@@ -1,19 +1,20 @@
 import React from "react";
 import { Card, CardContent, Typography, Button, Box } from "@mui/material";
-import axios from "axios";
+import { useRespondToRequestMutation } from "../../services/apiSlice"; 
 
 const FriendRequestItem = ({ request, type }) => {
+  const [respondToRequest] = useRespondToRequestMutation();
+
   const handleRespond = async (response) => {
     try {
-      await axios.put(
-        `http://localhost:3001/v1/friend/response/${request.friendshipid}`,
-        { response }
-      );
-
+      await respondToRequest({
+        friendshipId: request.friendshipid,
+        response, 
+      }).unwrap();
       alert(`Request ${response === "accept" ? "accepted" : "declined"}!`);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to respond to request. Check console for details.");
+    } catch (error) {
+      console.error("Failed to respond:", error);
+      alert("Failed to respond to request");
     }
   };
 
@@ -26,19 +27,10 @@ const FriendRequestItem = ({ request, type }) => {
 
         {type === "received" ? (
           <Box>
-            <Button
-              size="small"
-              color="success"
-              onClick={() => handleRespond("accept")}
-              sx={{ mr: 1 }}
-            >
+            <Button size="small" color="success" onClick={() => handleRespond("accept")} sx={{ mr: 1 }}>
               Accept
             </Button>
-            <Button
-              size="small"
-              color="error"
-              onClick={() => handleRespond("decline")}
-            >
+            <Button size="small" color="error" onClick={() => handleRespond("decline")}>
               Decline
             </Button>
           </Box>

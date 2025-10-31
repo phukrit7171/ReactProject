@@ -1,7 +1,10 @@
 import React from "react";
 import { Card, CardContent, Typography, Button, Box } from "@mui/material";
+import { useDeleteFriendMutation } from "../../services/apiSlice";
 
 const FriendList = ({ friends }) => {
+  const [deleteFriend] = useDeleteFriendMutation();
+
   if (!friends.length) return <Typography>No friends yet.</Typography>;
 
   const currentUser = localStorage.getItem("username") || "alice";
@@ -19,7 +22,7 @@ const FriendList = ({ friends }) => {
                 variant="contained"
                 color="error"
                 size="small"
-                onClick={() => alert(`Delete ${friendName}`)}
+                onClick={() => deleteFriend(f.friendshipid)}
               >
                 Delete
               </Button>

@@ -1,30 +1,42 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { Box, FormControl, Select, MenuItem } from "@mui/material";
+import React, { useState } from "react";
+import { Box, FormControl, Select, MenuItem, Typography, CircularProgress } from "@mui/material";
 import FriendList from "../features/friends/FriendList";
 import FriendRequestList from "../features/friends/FriendRequestList";
+import { useGetMyFriendStatusQuery } from "../services/apiSlice"; 
 
 const FriendsPage = () => {
   const [view, setView] = useState("friends");
-  const [friends, setFriends] = useState([]);
-  const [sending, setSending] = useState([]);
-  const [response, setResponse] = useState([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await axios.get("http://localhost:3001/v1/friend/status/me");
+  // ดึงข้อมูลเพื่อนทั้งหมด (RTK Query ทำให้ useEffect ไม่จำเป็น)
+  const { data, error, isLoading, isError, refetch } = useGetMyFriendStatusQuery();
 
-        setFriends(res.data.friends || []);
-        setSending(res.data.pendingSent || []);       
-        setResponse(res.data.pendingReceived || []);  
-      } catch (error) {
-        console.error("Error fetching friend status:", error);
-      }
-    };
+  // ป้องกันกรณีที่ data ยังไม่มา
+  const friends = data?.friends || [];
+  const sending = data?.pendingSent || [];
+  const response = data?.pendingReceived || [];
 
-    fetchData();
-  }, []);
+  if (isLoading) {
+    return (
+      <Box sx={{ mt: 6, textAlign: "center" }}>
+        <CircularProgress />
+        <Typography>Loading friends...</Typography>
+      </Box>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Box sx={{ mt: 6, textAlign: "center", color: "red" }}>
+        <Typography>Error: {error?.data?.message || "Failed to load friends"}</Typography>
+        <Typography
+          sx={{ textDecoration: "underline", cursor: "pointer" }}
+          onClick={refetch}
+        >
+          Retry
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mt: 4 }}>

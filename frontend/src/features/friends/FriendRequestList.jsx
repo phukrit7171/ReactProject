@@ -2,6 +2,8 @@ import React from "react";
 import FriendRequestItem from "./FriendRequestItem";
 
 const FriendRequestList = ({ requests, type }) => {
+  if (!requests.length) return <p>No requests.</p>;
+
   return (
     <div>
       {requests.map((r) => (
