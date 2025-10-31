@@ -1,95 +1,93 @@
-import React, { useState } from 'react';
-import { TextField, Button, Box, Typography } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-// 1. Import hook จาก apiSlice
-import { useLoginMutation } from '../../services/apiSlice.js';
-import { storeToken } from '../../utils/tokenStorage.js'; //
+// src/auth/LoginForm.jsx
+import React, { useState } from "react";
+import { Box, TextField, Button, Typography, Paper } from "@mui/material";
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser } from "./authSlice";
+import { useNavigate } from "react-router-dom";
 
-const LoginForm = () => {
-  const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-  });
+export default function LoginForm() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { loading, error } = useSelector((state) => state.auth);
 
-  // 2. เรียกใช้ mutation hook
-  // RTK Query จะคืนค่า state ต่างๆ มาให้ (isLoading, isError, error)
-  const [login, { isLoading, isError, error }] = useLoginMutation();
+  const [form, setForm] = useState({ username: "", password: "" });
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      // 3. เรียก mutation
-      // .unwrap() จะคืนค่า response หรือ throw error
-      const payload = await login(formData).unwrap();
-      
-      // 4. จัดการ response
-      // payload คือ { token: '...' }
-      storeToken(payload.token, true); // true for rememberMe
-      navigate('/'); // ไปหน้า Chat หลัง login สำเร็จ
-    } catch (err) {
-      console.error('Login failed:', err);
-      // 'error' state จาก hook จะถูกตั้งค่าอัตโนมัติ
-    }
+    const res = await dispatch(loginUser(form));
+    if (!res.error) navigate("/");
   };
-  
+
   return (
     <Box
-      component="form"
-      onSubmit={handleSubmit}
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 2,
-        width: '300px',
-        margin: '0 auto',
-        mt: 5,
-      }}
-      noValidate
-      autoComplete="off"
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
+      minHeight="100vh"
     >
-      <TextField
-        label="Username"
-        name="username"
-        variant="outlined"
-        required
-        value={formData.username}
-        onChange={handleChange}
-        disabled={isLoading} // 5. ใช้ isLoading
-      />
-      <TextField
-        label="Password"
-        name="password"
-        type="password"
-        variant="outlined"
-        required
-        value={formData.password}
-        onChange={handleChange}
-        disabled={isLoading} // 5. ใช้ isLoading
-      />
-      {/* 6. แสดง Error อัตโนมัติ */}
-      {isError && (
-        <Typography color="error" variant="body2" textAlign="center">
-          {error.data?.message || 'Login failed. Check credentials.'}
-        </Typography>
-      )}
-      <Button 
-        variant="contained" 
-        color="primary" 
-        type="submit"
-        disabled={isLoading} // 5. ใช้ isLoading
+      <Paper
+        elevation={3}
+        sx={{ p: 4, width: 350, borderRadius: "16px", textAlign: "center" }}
       >
-        {isLoading ? 'Logging in...' : 'Login'}
-      </Button>
+        <Typography variant="h5" fontWeight="bold" mb={2}>
+          Sign in
+        </Typography>
+
+        <form onSubmit={handleSubmit}>
+          <TextField
+            fullWidth
+            label="Username"
+            name="username"
+            value={form.username}
+            onChange={handleChange}
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            type="password"
+            label="Password"
+            name="password"
+            value={form.password}
+            onChange={handleChange}
+            margin="normal"
+          />
+
+          <Button
+            fullWidth
+            type="submit"
+            variant="contained"
+            sx={{
+              mt: 2,
+              bgcolor: "orange",
+              color: "white",
+              borderRadius: "25px",
+              "&:hover": { bgcolor: "#e69500" },
+            }}
+            disabled={loading}
+          >
+            Sign in
+          </Button>
+
+          {error && (
+            <Typography color="error" variant="body2" mt={1}>
+              {error}
+            </Typography>
+          )}
+
+          <Typography variant="body2" mt={2}>
+            Don’t have an account?{" "}
+            <span
+              style={{ color: "orange", cursor: "pointer" }}
+              onClick={() => navigate("/register")}
+            >
+              Sign up
+            </span>
+          </Typography>
+        </form>
+      </Paper>
     </Box>
   );
-};
-
-export default LoginForm;
+}

@@ -1,12 +1,7 @@
-// Register page component
-// Page containing the registration form for new users
-import React from 'react';
-// Import registration form component
-import RegisterForm from '../features/auth/RegisterForm.jsx';
+// src/pages/RegisterPage.jsx
+import React from "react";
+import RegisterForm from "../features/auth/RegisterForm";
 
-
-const RegisterPage = () => {
+export default function RegisterPage() {
   return <RegisterForm />;
-};
-
-export default RegisterPage;
+}
