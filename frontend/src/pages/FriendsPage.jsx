@@ -62,7 +62,8 @@ const FriendsPage = () => {
 
     // Check if a friend request has already been sent to this user
     const existingRequest = sentRequests.find(request => 
-      request.receiver && request.receiver.id === targetUserId
+      (request.receiver && request.receiver.id === targetUserId) || 
+      (request.targetid && request.targetid === targetUserId)
     );
     
     if (existingRequest) {
@@ -72,9 +73,10 @@ const FriendsPage = () => {
 
     // Check if already friends with this user
     const existingFriend = friends.find(friend => {
-      const friendId = friend.sender?.id === currentUserId 
-        ? friend.receiver?.id 
-        : friend.sender?.id;
+      const isSender = friend.sender?.id === currentUserId || friend.senderid === currentUserId;
+      const friendId = isSender 
+        ? (friend.receiver?.id || friend.targetid) 
+        : (friend.sender?.id || friend.senderid);
       return friendId === targetUserId;
     });
     
@@ -154,7 +156,6 @@ const FriendsPage = () => {
           }}
         >
           <MenuItem value="friends" sx={{ fontSize: "1.1rem" }}>Friends</MenuItem>
-          <MenuItem value="send" sx={{ fontSize: "1.1rem" }}>Send Request</MenuItem>
           <MenuItem value="received" sx={{ fontSize: "1.1rem" }}>Received Requests</MenuItem>
           <MenuItem value="sent" sx={{ fontSize: "1.1rem" }}>Sent Requests</MenuItem>
         </Select>

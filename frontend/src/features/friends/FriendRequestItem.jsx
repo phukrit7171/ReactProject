@@ -7,9 +7,31 @@ const FriendRequestItem = ({ request, type }) => {
   const [respondToRequest] = useRespondToRequestMutation();
 
   const handleRespond = async (response) => {
+    // Log the request object to see what fields are available
+    console.log("Request object:", request);
+    console.log("Available ID fields:", {
+      id: request.id,
+      friendshipid: request.friendshipid,
+      friendshipId: request.friendshipId
+    });
+
+    // Validate that the request has a valid ID before attempting to respond
+    // Using the same field name priority as in the API transformation
+    const requestId = request.id || 
+                      request.friendshipid || 
+                      request.friendshipId || 
+                      (request.dataValues ? request.dataValues.friendshipid : undefined);
+    
+    if (!requestId) {
+      alert("Error: Cannot process request - request ID is missing.");
+      console.error("Request object missing valid ID:", request);
+      console.error("Available keys in request:", Object.keys(request));
+      return;
+    }
+
     try {
       await respondToRequest({
-        friendshipId: request.id,
+        friendshipId: requestId,
         response, 
       }).unwrap();
       alert(`Request ${response === "accept" ? "accepted" : "declined"}!`);

@@ -301,8 +301,17 @@ export const apiSlice = createApi({
         
         return allFriendships.map((friendship) => {
           // Extract sender and receiver before spreading other properties
+          // The backend model uses 'friendshipid' as the primary key field name
+          const id = friendship.friendshipid || 
+                     friendship.id || 
+                     friendship.friendshipId || 
+                     friendship._id || 
+                     (friendship.dataValues ? friendship.dataValues.friendshipid : undefined);
+          
           const transformedFriendship = {
-            id: friendship.friendshipid ?? friendship.id,
+            id: id,
+            // Keep the original field name for reference if needed elsewhere
+            friendshipid: id,
             // Use the status we explicitly assigned, fallback to 'pending' if somehow undefined
             status: friendship.status || 'pending', 
             sender: friendship.sender ? {
@@ -337,8 +346,8 @@ export const apiSlice = createApi({
       invalidatesTags: ["Friend"],
     }),
     respondToRequest: builder.mutation({
-      query: ({ friendshipid, response }) => ({
-        url: API_ENDPOINTS.FRIENDS.RESPOND(friendshipid),
+      query: ({ friendshipId, response }) => ({
+        url: API_ENDPOINTS.FRIENDS.RESPOND(friendshipId),
         method: "PUT",
         body: { response },
       }),
