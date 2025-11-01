@@ -164,8 +164,8 @@ export const apiSlice = createApi({
       transformResponse: (response) => {
         if (!Array.isArray(response)) return response;
         return response.map((room, idx) => ({
-          id: room.id ?? room._id ?? `room-${idx}`,
-          name: room.name ?? `Chat ${idx + 1}`,
+          id: room.id ?? room.roomid ?? room._id ?? `room-${idx}`,
+          name: room.name ?? `Room ${room.roomid ?? idx + 1}`,
           members: Array.isArray(room.members) ? room.members : [],
           ...room,
         }));
@@ -351,7 +351,7 @@ export const apiSlice = createApi({
         method: "PUT",
         body: { response },
       }),
-      invalidatesTags: ["Friend"],
+      invalidatesTags: ["Friend", "Chatroom"],
     }),
     deleteFriend: builder.mutation({
       query: (friendshipid) => ({
