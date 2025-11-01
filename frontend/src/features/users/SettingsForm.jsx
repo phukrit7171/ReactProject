@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Button, Box, Typography, Alert, Paper } from '@mui/material';
+import { TextField, Button, Box, Typography, Alert, Paper, MenuItem } from '@mui/material';
 import { useGetMeQuery, useUpdateUserMutation } from '../../services/apiSlice.js';
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 
@@ -119,13 +119,17 @@ const SettingsForm = () => {
       />
 
       <TextField
+        select
         label="Original Language"
         name="originallang"
         value={formData.originallang}
         onChange={handleChange}
         disabled={isUpdating}
         required
-      />
+      >
+        <MenuItem value="English">English</MenuItem>
+        <MenuItem value="Thai">Thai</MenuItem>
+      </TextField>
 
       {successMessage && (
         <Alert severity="success" sx={{ textAlign: 'center' }}>

@@ -83,7 +83,6 @@ export default function RegisterForm() {
           >
             <MenuItem value="English">English</MenuItem>
             <MenuItem value="Thai">Thai</MenuItem>
-            <MenuItem value="Chinese">Chinese</MenuItem>
           </TextField>
 
           <Button
