@@ -1,4 +1,4 @@
-import List from '@mui/material/List';
+import { Box } from '@mui/material';
 import Message from './Message.jsx';
 import { useGetMeQuery } from '../../services/apiSlice';
 
@@ -8,7 +8,7 @@ const MessageList = ({ messages }) => {
   const currentUserId = currentUser?.id;
 
   return (
-    <List sx={{ maxHeight: '400px', overflowY: 'auto' }}>
+    <Box sx={{ flex: 1, overflowY: 'auto', padding: '10px', display: 'flex', flexDirection: 'column' }}>
       {messages.map((msg, index) => {
         // If current user is the sender, show original message; otherwise show translated message
         const isCurrentUserSender = msg.sender?.id === currentUserId || msg.senderId === currentUserId;
@@ -24,7 +24,7 @@ const MessageList = ({ messages }) => {
           />
         );
       })}
-    </List>
+    </Box>
   );
 };
 

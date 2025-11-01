@@ -60,12 +60,12 @@ const ChatWindow = ({ selectedRoomId }) => {
 
   return (
     <Box
-      sx={{ flex: 1, display: "flex", flexDirection: "column", height: "100%" }}
+      sx={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", backgroundColor: "#f5f5f5" }}
     >
-      <Box sx={{ flex: 1, overflowY: "auto", padding: "16px" }}>
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {isLoading ? <LoadingSpinner /> : <MessageList messages={messages} />}
       </Box>
-      <Box sx={{ padding: "16px", borderTop: "1px solid #ccc" }}>
+      <Box sx={{ padding: "16px", borderTop: "1px solid #ddd", backgroundColor: "white" }}>
         <MessageInput onSend={handleSendMessage} />
       </Box>
     </Box>

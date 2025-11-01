@@ -9,7 +9,7 @@ const ChatPage = () => {
   const [selectedRoomId, setSelectedRoomId] = useState(null);
 
   return (
-    <Box sx={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
+    <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       <ChatRoomList onSelectRoom={setSelectedRoomId} />
       <ChatWindow selectedRoomId={selectedRoomId} />
     </Box>

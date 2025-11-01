@@ -1,6 +1,5 @@
 import React from 'react';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
+import { Box, TextField, Button } from '@mui/material';
 
 // Input field with send button for chat messages
 const MessageInput = ({ onSend }) => {
@@ -14,7 +13,7 @@ const MessageInput = ({ onSend }) => {
   };
 
   return (
-    <div style={{ display: 'flex', gap: '8px' }}>
+    <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
       <TextField
         fullWidth
         variant="outlined"
@@ -22,16 +21,18 @@ const MessageInput = ({ onSend }) => {
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         onKeyPress={(e) => {
-          if (e.key === 'Enter') {
+          if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSend();
           }
         }}
+        multiline
+        maxRows={4}
       />
       <Button variant="contained" color="primary" onClick={handleSend}>
         Send
       </Button>
-    </div>
+    </Box>
   );
 };
 
