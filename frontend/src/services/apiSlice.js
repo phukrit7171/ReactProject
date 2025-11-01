@@ -287,22 +287,40 @@ export const apiSlice = createApi({
     getMyFriendStatus: builder.query({
       query: () => API_ENDPOINTS.FRIENDS.GET_STATUS,
       transformResponse: (response) => {
-        if (!Array.isArray(response)) return [];
-        return response.map((friendship) => ({
-          id: friendship.friendshipid ?? friendship.id,
-          status: friendship.status ?? 'pending',
-          sender: friendship.sender ? {
-            id: friendship.sender.userid,
-            username: friendship.sender.username,
-            ...friendship.sender,
-          } : null,
-          receiver: friendship.receiver ? {
-            id: friendship.receiver.userid,
-            username: friendship.receiver.username,
-            ...friendship.receiver,
-          } : null,
-          ...friendship,
-        }));
+        // Backend returns an object with separate arrays for friends, pendingSent, and pendingReceived
+        if (!response || typeof response !== 'object') return [];
+        
+        const { friends = [], pendingSent = [], pendingReceived = [] } = response;
+        
+        // Combine all three arrays into a single array of friendship objects
+        const allFriendships = [
+          ...friends.map(friendship => ({ ...friendship, status: 'accepted' })),
+          ...pendingSent.map(friendship => ({ ...friendship, status: 'pending' })),
+          ...pendingReceived.map(friendship => ({ ...friendship, status: 'pending' }))
+        ];
+        
+        return allFriendships.map((friendship) => {
+          // Extract sender and receiver before spreading other properties
+          const transformedFriendship = {
+            id: friendship.friendshipid ?? friendship.id,
+            // Use the status we explicitly assigned, fallback to 'pending' if somehow undefined
+            status: friendship.status || 'pending', 
+            sender: friendship.sender ? {
+              id: friendship.sender.userid,
+              username: friendship.sender.username,
+              ...friendship.sender,
+            } : null,
+            receiver: friendship.receiver ? {
+              id: friendship.receiver.userid,
+              username: friendship.receiver.username,
+              ...friendship.receiver,
+            } : null,
+          };
+          
+          // Spread other properties, but don't override the sender/receiver we just created
+          const { sender, receiver, ...otherProps } = friendship;
+          return { ...transformedFriendship, ...otherProps };
+        });
       },
       providesTags: (result) => 
         result
@@ -319,7 +337,6 @@ export const apiSlice = createApi({
       invalidatesTags: ["Friend"],
     }),
     respondToRequest: builder.mutation({
-      // arg: { friendshipid, response: 'accept' | 'decline' }
       query: ({ friendshipid, response }) => ({
         url: API_ENDPOINTS.FRIENDS.RESPOND(friendshipid),
         method: "PUT",

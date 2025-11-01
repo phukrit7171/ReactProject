@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, Typography, Button, Box } from "@mui/material";
 import { useDeleteFriendMutation, useGetMeQuery } from "../../services/apiSlice";
 
-// Displays list of friends with delete functionality
+// Displays a list of friends with delete functionality
 const FriendList = ({ friendships }) => {
   const [deleteFriend] = useDeleteFriendMutation();
   const { data: currentUser } = useGetMeQuery(); // Get current user data
@@ -30,13 +30,15 @@ const FriendList = ({ friendships }) => {
                 color="error"
                 size="small"
                 onClick={async () => {
+                  if (!window.confirm("Are you sure you want to remove this friend?")) {
+                    return; // User canceled
+                  }
+                  
                   try {
                     await deleteFriend(friendship.id).unwrap();
                   } catch (error) {
-                    // Handle different error response formats
                     let errorMessage = "Failed to remove friend";
                     if (error?.data?.error) {
-                      // Backend returns { message: "Error removing friendship.", error: "Specific error message" }
                       errorMessage = error.data.error;
                     } else if (error?.data?.message) {
                       errorMessage = error.data.message;

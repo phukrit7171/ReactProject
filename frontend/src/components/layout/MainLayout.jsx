@@ -10,7 +10,7 @@ const MainLayout = () => {
       <CssBaseline />
       <Navbar />
       <PageWrapper>
-        <Outlet /> {/* 2. หน้าลูก (Chat, Friends) จะมาแสดงผลตรงนี้ */}
+        <Outlet /> {/* 2. Child pages (Chat, Friends) will be displayed here */}
       </PageWrapper>
     </>
   );

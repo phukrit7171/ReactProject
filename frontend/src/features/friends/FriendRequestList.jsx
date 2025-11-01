@@ -1,9 +1,11 @@
 import React from "react";
 import FriendRequestItem from "./FriendRequestItem";
 
-// Displays list of friend requests
+// Displays a list of friend requests
 const FriendRequestList = ({ requests, type }) => {
-  if (!requests.length) return <p>No requests.</p>;
+  if (!requests || !Array.isArray(requests) || !requests.length) {
+    return <p>No {type} requests.</p>;
+  }
 
   return (
     <div>
