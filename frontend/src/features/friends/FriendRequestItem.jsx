@@ -2,12 +2,12 @@ import React from "react";
 import { Card, CardContent, Typography, Button, Box } from "@mui/material";
 import { useRespondToRequestMutation } from "../../services/apiSlice"; 
 
-// Displays a single friend request with accept/decline options
+// Component to display a single friend request with accept/decline options
 const FriendRequestItem = ({ request, type }) => {
   const [respondToRequest] = useRespondToRequestMutation();
 
   const handleRespond = async (response) => {
-    // Log the request object to see what fields are available
+    // Log the request object for debugging
     console.log("Request object:", request);
     console.log("Available ID fields:", {
       id: request.id,
@@ -16,7 +16,6 @@ const FriendRequestItem = ({ request, type }) => {
     });
 
     // Validate that the request has a valid ID before attempting to respond
-    // Using the same field name priority as in the API transformation
     const requestId = request.id || 
                       request.friendshipid || 
                       request.friendshipId || 

@@ -18,23 +18,22 @@ import {
   useSendFriendRequestMutation 
 } from "../services/apiSlice"; 
 
-// Page for managing friends and friend requests
+// Component for managing friends and friend requests
 const FriendsPage = () => {
   const [view, setView] = useState("friends");
   const [targetUserId, setTargetUserId] = useState("");
   const [requestSent, setRequestSent] = useState(false);
   const [sendFriendRequest, { isLoading: isSendingRequest }] = useSendFriendRequestMutation();
 
-  // Fetch friend status data using RTK Query
+  // Fetch friend status and current user data
   const { data: friendStatusData, error, isLoading, isError, refetch } = useGetMyFriendStatusQuery(undefined, {
     refetchOnMountOrArgChange: true,
   });
   const { data: currentUser } = useGetMeQuery(undefined, {
     refetchOnMountOrArgChange: true,
-  }); // Get current user data
+  });
 
   // Initialize data arrays to prevent errors when data is not yet loaded
-  // API returns an array of all friendship relationships, need to filter by status
   const allFriendships = friendStatusData || [];
   const currentUserId = currentUser?.id;
   
@@ -114,7 +113,7 @@ const FriendsPage = () => {
     }
   };
 
-  // Show loading state if either current user data or friend status data is not loaded
+  // Show loading state if data is not loaded
   const isUserDataLoading = !currentUser;
   const isFriendDataLoading = isLoading;
   
@@ -142,32 +141,47 @@ const FriendsPage = () => {
   }
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mt: 4 }}>
-      <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }}>
+    <Box sx={{ 
+      display: "flex", 
+      flexDirection: "column", 
+      alignItems: "center", 
+      mt: 4,
+      width: "100%",
+      maxWidth: 800,
+      mx: "auto",
+      px: 2
+    }}>
+      <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold', textAlign: 'center' }}>
         Welcome, {currentUser?.username}! (ID: {currentUser?.id})
       </Typography>
-      <FormControl size="small" sx={{ mb: 3 }}>
+      
+      <FormControl size="small" sx={{ 
+        mb: 3,
+        minWidth: { xs: "100%", sm: 200 },
+        maxWidth: 400
+      }}>
         <Select
           value={view}
           onChange={(e) => setView(e.target.value)}
           sx={{
-            fontSize: "1.5rem",
+            fontSize: { xs: "1.2rem", md: "1.5rem" },
             minWidth: 150,
           }}
         >
-          <MenuItem value="friends" sx={{ fontSize: "1.1rem" }}>Friends</MenuItem>
-          <MenuItem value="received" sx={{ fontSize: "1.1rem" }}>Received Requests</MenuItem>
-          <MenuItem value="sent" sx={{ fontSize: "1.1rem" }}>Sent Requests</MenuItem>
+          <MenuItem value="friends" sx={{ fontSize: { xs: "1rem", md: "1.1rem" } }}>Friends</MenuItem>
+          <MenuItem value="send" sx={{ fontSize: { xs: "1rem", md: "1.1rem" } }}>Send Friend Request</MenuItem>
+          <MenuItem value="received" sx={{ fontSize: { xs: "1rem", md: "1.1rem" } }}>Received Requests</MenuItem>
         </Select>
       </FormControl>
 
       <Box
         sx={{
-          width: "400px",
+          width: "100%",
+          maxWidth: 600,
           border: "1px solid #ddd",
           borderRadius: 2,
-          p: 2,
-          boxShadow: 1,
+          p: { xs: 2, sm: 3 },
+          boxShadow: 2,
           backgroundColor: "white",
         }}
       >
@@ -176,7 +190,7 @@ const FriendsPage = () => {
           <Paper 
             elevation={2} 
             sx={{ 
-              p: 2, 
+              p: { xs: 2, sm: 3 }, 
               backgroundColor: '#f5f5f5',
               display: 'flex',
               flexDirection: 'column',
@@ -184,7 +198,13 @@ const FriendsPage = () => {
             }}
           >
             <Typography variant="h6" mb={2}>Send Friend Request</Typography>
-            <Box sx={{ display: 'flex', gap: 1, width: '100%' }}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' }, 
+              gap: 1, 
+              width: '100%',
+              alignItems: 'center'
+            }}>
               <TextField
                 fullWidth
                 size="small"
@@ -192,25 +212,46 @@ const FriendsPage = () => {
                 value={targetUserId}
                 onChange={(e) => setTargetUserId(e.target.value)}
                 placeholder="Enter user ID to add"
+                sx={{ mb: { xs: 1, sm: 0 } }}
               />
               <Button 
                 variant="contained" 
                 color="primary" 
                 onClick={handleSendRequest}
                 disabled={isSendingRequest || !targetUserId.trim()}
+                sx={{ 
+                  minWidth: 100,
+                  px: { xs: 1, sm: 2 } 
+                }}
               >
                 {isSendingRequest ? 'Sending...' : 'Send'}
               </Button>
             </Box>
             {requestSent && (
-              <Typography color="success.main" mt={1}>
-                Friend request sent successfully!
-              </Typography>
+              <Box sx={{ 
+                mt: 2, 
+                p: 1, 
+                borderRadius: 1, 
+                backgroundColor: 'success.light', 
+                color: 'success.dark',
+                width: '100%',
+                textAlign: 'center',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Typography sx={{ fontWeight: 'bold' }}>
+                  ✓ Friend request sent successfully!
+                </Typography>
+              </Box>
             )}
+            <FriendRequestList 
+              requests={sentRequests} 
+              type="sent" 
+            />
           </Paper>
         )}
         {view === "received" && <FriendRequestList requests={receivedRequests} type="received" />}
-        {view === "sent" && <FriendRequestList requests={sentRequests} type="sent" />}
       </Box>
     </Box>
   );

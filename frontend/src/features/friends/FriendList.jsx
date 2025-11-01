@@ -2,14 +2,13 @@ import React from "react";
 import { Card, CardContent, Typography, Button, Box } from "@mui/material";
 import { useDeleteFriendMutation, useGetMeQuery } from "../../services/apiSlice";
 
-// Displays a list of friends with delete functionality
+// Component to display a list of friends with delete functionality
 const FriendList = ({ friendships }) => {
   const [deleteFriend] = useDeleteFriendMutation();
-  const { data: currentUser } = useGetMeQuery(); // Get current user data
+  const { data: currentUser } = useGetMeQuery();
 
   if (!friendships.length) return <Typography>No friends yet.</Typography>;
 
-  // Get current user ID from the API response
   const currentUserId = currentUser?.id;
 
   return (
