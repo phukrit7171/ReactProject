@@ -1,9 +1,7 @@
 // API Configuration
 // Contains all API endpoints and related settings
-// Base URL for API requests
-// API endpoints grouped by functionality
 
-// อ่าน BASE_URL จาก Environment Variables (VITE_API_URL ตามใน README.md)
+// Read BASE_URL from Environment Variables (VITE_API_URL as per README.md)
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'; // fallback URL
 
 export const API_ENDPOINTS = {
@@ -14,22 +12,19 @@ export const API_ENDPOINTS = {
     LOGOUT: '/v1/auth/logout',
   },
   USERS: {
-    BASE: '/v1/users',
     GET_ALL: '/v1/users',
     GET_ME: '/v1/users/me',
-    GET_BY_ID: (id) => `/v1/users/${id}`, // ตัวอย่างการใช้ function
+    GET_BY_ID: (id) => `/v1/users/${id}`, // Example of using function
     UPDATE: (id) => `/v1/users/${id}`,
     DELETE: (id) => `/v1/users/${id}`,
   },
   CHATROOMS: {
-    BASE: '/v1/chatrooms',
     GET_ALL: '/v1/chatrooms',
     CREATE: '/v1/chatrooms',
     GET_BY_ID: (id) => `/v1/chatrooms/${id}`,
     DELETE: (id) => `/v1/chatrooms/${id}`,
   },
   MESSAGES: {
-    BASE: '/v1/messages',
     CREATE: '/v1/messages',
     GET_BY_ID: (id) => `/v1/messages/${id}`,
     GET_BY_ROOM: (id) => `/v1/messages/chatrooms/${id}`, // ?filter=sent/received

@@ -2,19 +2,30 @@ import React from "react";
 import { Card, CardContent, Typography, Button, Box } from "@mui/material";
 import { useRespondToRequestMutation } from "../../services/apiSlice"; 
 
+// Displays a single friend request with accept/decline options
 const FriendRequestItem = ({ request, type }) => {
   const [respondToRequest] = useRespondToRequestMutation();
 
   const handleRespond = async (response) => {
     try {
       await respondToRequest({
-        friendshipId: request.friendshipid,
+        friendshipId: request.id,
         response, 
       }).unwrap();
       alert(`Request ${response === "accept" ? "accepted" : "declined"}!`);
     } catch (error) {
       console.error("Failed to respond:", error);
-      alert("Failed to respond to request");
+      // Handle different error response formats
+      let errorMessage = "Failed to respond to request";
+      if (error?.data?.error) {
+        // Backend returns { message: "Error responding to friend request.", error: "Specific error message" }
+        errorMessage = error.data.error;
+      } else if (error?.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error?.error) {
+        errorMessage = error.error;
+      }
+      alert(`Error: ${errorMessage}`);
     }
   };
 
@@ -22,7 +33,7 @@ const FriendRequestItem = ({ request, type }) => {
     <Card sx={{ mb: 2, boxShadow: 2 }}>
       <CardContent sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Typography>
-          {type === "sent" ? request.receiver.username : request.sender.username}
+          {type === "sent" ? request.receiver?.username : request.sender?.username}
         </Typography>
 
         {type === "received" ? (

@@ -1,19 +1,74 @@
 import React, { useState } from "react";
-import { Box, FormControl, Select, MenuItem, Typography, CircularProgress } from "@mui/material";
+import { 
+  Box, 
+  FormControl, 
+  Select, 
+  MenuItem, 
+  Typography, 
+  CircularProgress, 
+  TextField, 
+  Button,
+  Paper
+} from "@mui/material";
 import FriendList from "../features/friends/FriendList";
 import FriendRequestList from "../features/friends/FriendRequestList";
-import { useGetMyFriendStatusQuery } from "../services/apiSlice"; 
+import { 
+  useGetMyFriendStatusQuery, 
+  useGetMeQuery, 
+  useSendFriendRequestMutation 
+} from "../services/apiSlice"; 
 
+// Page for managing friends and friend requests
 const FriendsPage = () => {
   const [view, setView] = useState("friends");
+  const [targetUserId, setTargetUserId] = useState("");
+  const [requestSent, setRequestSent] = useState(false);
+  const [sendFriendRequest, { isLoading: isSendingRequest }] = useSendFriendRequestMutation();
 
-  // ดึงข้อมูลเพื่อนทั้งหมด (RTK Query ทำให้ useEffect ไม่จำเป็น)
+  // Fetch friend status data using RTK Query
   const { data, error, isLoading, isError, refetch } = useGetMyFriendStatusQuery();
+  const { data: currentUser } = useGetMeQuery(); // Get current user data
 
-  // ป้องกันกรณีที่ data ยังไม่มา
-  const friends = data?.friends || [];
-  const sending = data?.pendingSent || [];
-  const response = data?.pendingReceived || [];
+  // Initialize data arrays to prevent errors when data is not yet loaded
+  // API returns an array of all friendship relationships, need to filter by status
+  const allFriendships = data || [];
+  const currentUserId = currentUser?.id;
+  
+  const friends = allFriendships.filter(f => f.status === 'accepted');
+  const sentRequests = allFriendships.filter(f => f.status === 'pending' && f.sender?.id === currentUserId);
+  const receivedRequests = allFriendships.filter(f => f.status === 'pending' && f.receiver?.id === currentUserId);
+
+  const handleSendRequest = async () => {
+    if (!targetUserId.trim()) {
+      alert("Please enter a valid user ID");
+      return;
+    }
+
+    if (targetUserId === currentUserId) {
+      alert("You cannot send a friend request to yourself.");
+      return;
+    }
+
+    try {
+      await sendFriendRequest({ targetid: targetUserId }).unwrap();
+      setTargetUserId("");
+      setRequestSent(true);
+      setTimeout(() => setRequestSent(false), 3000);
+    } catch (error) {
+      console.error("Failed to send friend request:", error);
+      // Handle different error response formats
+      let errorMessage = "Failed to send friend request. Please try again.";
+      if (error?.data?.error) {
+        // Backend returns { message: "Error sending friend request.", error: "Specific error message" }
+        errorMessage = error.data.error;
+      } else if (error?.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error?.error) {
+        errorMessage = error.error;
+      }
+      alert(`Error: ${errorMessage}`);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -50,8 +105,8 @@ const FriendsPage = () => {
           }}
         >
           <MenuItem value="friends" sx={{ fontSize: "1.1rem" }}>Friends</MenuItem>
-          <MenuItem value="response" sx={{ fontSize: "1.1rem" }}>Responses</MenuItem>
-          <MenuItem value="sending" sx={{ fontSize: "1.1rem" }}>Sending</MenuItem>
+          <MenuItem value="send" sx={{ fontSize: "1.1rem" }}>Send Request</MenuItem>
+          <MenuItem value="received" sx={{ fontSize: "1.1rem" }}>Received Requests</MenuItem>
         </Select>
       </FormControl>
 
@@ -65,9 +120,45 @@ const FriendsPage = () => {
           backgroundColor: "white",
         }}
       >
-        {view === "friends" && <FriendList friends={friends} />}
-        {view === "response" && <FriendRequestList requests={response} type="received" />}
-        {view === "sending" && <FriendRequestList requests={sending} type="sent" />}
+        {view === "friends" && <FriendList friendships={friends} />}
+        {view === "send" && (
+          <Paper 
+            elevation={2} 
+            sx={{ 
+              p: 2, 
+              backgroundColor: '#f5f5f5',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center'
+            }}
+          >
+            <Typography variant="h6" mb={2}>Send Friend Request</Typography>
+            <Box sx={{ display: 'flex', gap: 1, width: '100%' }}>
+              <TextField
+                fullWidth
+                size="small"
+                label="User ID"
+                value={targetUserId}
+                onChange={(e) => setTargetUserId(e.target.value)}
+                placeholder="Enter user ID to add"
+              />
+              <Button 
+                variant="contained" 
+                color="primary" 
+                onClick={handleSendRequest}
+                disabled={isSendingRequest || !targetUserId.trim()}
+              >
+                {isSendingRequest ? 'Sending...' : 'Send'}
+              </Button>
+            </Box>
+            {requestSent && (
+              <Typography color="success.main" mt={1}>
+                Friend request sent successfully!
+              </Typography>
+            )}
+          </Paper>
+        )}
+        {view === "received" && <FriendRequestList requests={receivedRequests} type="received" />}
       </Box>
     </Box>
   );

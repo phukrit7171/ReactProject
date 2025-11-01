@@ -1,28 +1,51 @@
 import React from "react";
 import { Card, CardContent, Typography, Button, Box } from "@mui/material";
-import { useDeleteFriendMutation } from "../../services/apiSlice";
+import { useDeleteFriendMutation, useGetMeQuery } from "../../services/apiSlice";
 
-const FriendList = ({ friends }) => {
+// Displays list of friends with delete functionality
+const FriendList = ({ friendships }) => {
   const [deleteFriend] = useDeleteFriendMutation();
+  const { data: currentUser } = useGetMeQuery(); // Get current user data
 
-  if (!friends.length) return <Typography>No friends yet.</Typography>;
+  if (!friendships.length) return <Typography>No friends yet.</Typography>;
 
-  const currentUser = localStorage.getItem("username") || "alice";
+  // Get current user ID from the API response
+  const currentUserId = currentUser?.id;
 
   return (
     <Box sx={{ p: 2 }}>
-      {friends.map((f) => {
-        const friendName = f.sender.username === currentUser ? f.receiver.username : f.sender.username;
+      {friendships.map((friendship) => {
+        // Determine friend's name based on which user is current user
+        const friend = friendship.sender?.id === currentUserId 
+          ? friendship.receiver 
+          : friendship.sender;
+        const friendName = friend?.username || 'Unknown User';
 
         return (
-          <Card key={f.friendshipid} sx={{ mb: 2, boxShadow: 2 }}>
+          <Card key={friendship.id} sx={{ mb: 2, boxShadow: 2 }}>
             <CardContent sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <Typography sx={{ fontSize: 16, fontWeight: 500 }}>{friendName}</Typography>
               <Button
                 variant="contained"
                 color="error"
                 size="small"
-                onClick={() => deleteFriend(f.friendshipid)}
+                onClick={async () => {
+                  try {
+                    await deleteFriend(friendship.id).unwrap();
+                  } catch (error) {
+                    // Handle different error response formats
+                    let errorMessage = "Failed to remove friend";
+                    if (error?.data?.error) {
+                      // Backend returns { message: "Error removing friendship.", error: "Specific error message" }
+                      errorMessage = error.data.error;
+                    } else if (error?.data?.message) {
+                      errorMessage = error.data.message;
+                    } else if (error?.error) {
+                      errorMessage = error.error;
+                    }
+                    alert(`Error: ${errorMessage}`);
+                  }
+                }}
               >
                 Delete
               </Button>

@@ -7,6 +7,7 @@ import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import { useGetChatroomsQuery } from '../../services/apiSlice.js';
 import { ListItemButton } from '@mui/material';
 
+// Displays list of chat rooms with selection capability
 const ChatRoomList = ({ onSelectRoom }) => {
   const {
     data: chatRooms = [],

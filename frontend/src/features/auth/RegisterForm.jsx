@@ -12,6 +12,7 @@ import {
 import { useSignupMutation } from "../../services/apiSlice";
 import { useNavigate } from "react-router-dom";
 
+// Registration form for new users
 export default function RegisterForm() {
   const navigate = useNavigate();
   const [signup, { isLoading: loading, error }] = useSignupMutation();
@@ -30,7 +31,7 @@ export default function RegisterForm() {
     e.preventDefault();
     try {
       const res = await signup(form).unwrap();
-      // signup succeeded
+      // On successful signup, navigate to login page
       navigate("/login");
     } catch (err) {
       // error will be shown from `error` returned by the mutation

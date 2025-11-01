@@ -1,11 +1,9 @@
 import { Navigate } from 'react-router-dom';
-// Import state from react-redux (if needed for auth state)
 import { getToken, removeToken } from '../../utils/tokenStorage';
 import { useGetMeQuery } from '../../services/apiSlice';
 import LoadingSpinner from '../common/LoadingSpinner';
 
-// ProtectedRoute component to restrict access to authenticated users
-// Redirects unauthenticated users to login page
+// Protected Route component: restricts access to authenticated users
 const ProtectedRoute = ({ children }) => {
   // Check for stored token first to avoid unnecessary request
   const token = getToken();
@@ -13,8 +11,10 @@ const ProtectedRoute = ({ children }) => {
   if (!token) return <Navigate to="/login" replace />;
 
   // Validate token by calling /v1/users/me. Skip query if no token.
+  // Using refetchOnMountOrArgChange to ensure fresh data when switching accounts
   const { data, isLoading, isSuccess, isError } = useGetMeQuery(undefined, {
     skip: !token,
+    refetchOnMountOrArgChange: true,
   });
 
   if (isLoading) return <LoadingSpinner />;

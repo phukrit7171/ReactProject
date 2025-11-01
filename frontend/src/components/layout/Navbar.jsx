@@ -1,22 +1,22 @@
-// Import Material UI components for the navbar
 import { AppBar, Toolbar, Typography, Box, Button } from "@mui/material";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useLogoutMutation } from "../../services/apiSlice";
-import { removeToken } from "../../utils/tokenStorage";
 
-// Creates a consistent navigation bar for the application
+// Application navigation bar with logout functionality
 const Navbar = () => {
   const [logout] = useLogoutMutation();
   const navigate = useNavigate();
+  
   const handleLogout = async () => {
     try {
       await logout().unwrap();
     } catch (err) {
       console.error("Failed to logout:", err);
     }
-    clearToken();
+    // Token removal is handled by logout mutation
     navigate("/login");
   };
+  
   return (
     <AppBar position="static">
       <Toolbar>

@@ -2,12 +2,12 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { API_ENDPOINTS } from "../constants/apiConfig";
 import { getToken, saveToken, removeToken } from "../utils/tokenStorage";
 
-// สร้าง API service หลัก
+// Create main API service
 export const apiSlice = createApi({
-  // ชื่อของ reducer (default คือ 'api')
+  // Name of the reducer (default is 'api')
   reducerPath: "api",
 
-  // ตั้งค่า baseQuery ที่จะใช้กับทุก endpoint
+  // Configure baseQuery to be used with all endpoints
   // Wrap fetchBaseQuery to automatically attach token and handle 401 by clearing it
   baseQuery: (() => {
     const rawBase = fetchBaseQuery({
@@ -29,10 +29,10 @@ export const apiSlice = createApi({
     };
   })(),
 
-  // 'tagTypes' ใช้สำหรับ Caching - เพื่อบอกว่าข้อมูลประเภทไหนควรจะ "invalidate"
+  // 'tagTypes' used for caching - to specify which data types should be invalidated
   tagTypes: ["User", "Chatroom", "Message", "Friend"],
 
-  // 'endpoints' คือที่ที่เราจะกำหนด API ทั้งหมด
+  // 'endpoints' is where we define all API endpoints
   endpoints: (builder) => ({
     // === Authentication ===
     signup: builder.mutation({
@@ -41,6 +41,19 @@ export const apiSlice = createApi({
         method: "POST",
         body: userData, // { username, password, originallang }
       }),
+      // Reset API cache when signup succeeds to ensure clean state
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data?.token) {
+            // Reset the API cache to clear any previous user data
+            dispatch(apiSlice.util.resetApiState());
+            saveToken(data.token);
+          }
+        } catch (err) {
+          // ignore - error handled by hook consumer
+        }
+      },
     }),
     login: builder.mutation({
       query: (credentials) => ({
@@ -48,11 +61,13 @@ export const apiSlice = createApi({
         method: "POST",
         body: credentials, // { username, password }
       }),
-      // Save token to localStorage when login succeeds
+      // Save token and reset API cache when login succeeds
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
           if (data?.token) {
+            // Reset the API cache to clear any previous user data
+            dispatch(apiSlice.util.resetApiState());
             saveToken(data.token);
           }
         } catch (err) {
@@ -65,12 +80,13 @@ export const apiSlice = createApi({
         url: API_ENDPOINTS.AUTH.LOGOUT,
         method: "POST",
       }),
-      // Remove token on successful logout
+      // Remove token and reset API cache on successful logout
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           await queryFulfilled;
           removeToken();
-          // optionally: dispatch(apiSlice.util.resetApiState()) if you want to clear cache
+          // Reset the entire API cache to clear all user data
+          dispatch(apiSlice.util.resetApiState());
         } catch (err) {
           // ignore
         }
@@ -84,7 +100,7 @@ export const apiSlice = createApi({
       transformResponse: (response) => {
         if (!Array.isArray(response)) return response;
         return response.map((u) => ({
-          id: u.userid, // API ส่ง userid มา
+          id: u.userid,
           username: u.username,
           originallang: u.originallang,
           ...u,
@@ -97,6 +113,20 @@ export const apiSlice = createApi({
               { type: "User", id: "LIST" },
             ]
           : [{ type: "User", id: "LIST" }],
+    }),
+    getUserById: builder.query({
+      query: (id) => API_ENDPOINTS.USERS.GET_BY_ID(id),
+      transformResponse: (response) => {
+        if (!response) return null;
+        return {
+          id: response.userid,
+          username: response.username,
+          originallang: response.originallang,
+          ...response,
+        };
+      },
+      providesTags: (result) =>
+        result ? [{ type: "User", id: result.id }] : [],
     }),
     getMe: builder.query({
       query: () => API_ENDPOINTS.USERS.GET_ME,
@@ -135,19 +165,8 @@ export const apiSlice = createApi({
         if (!Array.isArray(response)) return response;
         return response.map((room, idx) => ({
           id: room.id ?? room._id ?? `room-${idx}`,
-          name: room.name ?? room.title ?? `Chat ${idx + 1}`,
-          members: Array.isArray(room.members) ? room.members.map(member => ({
-            id: member.id ?? member._id,
-            username: member.username ?? member.name ?? 'Unknown User',
-            ...member,
-          })) : [],
-          lastMessage: room.lastMessage ? {
-            id: room.lastMessage.id ?? room.lastMessage._id,
-            text: room.lastMessage.text ?? room.lastMessage.content ?? '',
-            senderId: room.lastMessage.senderId ?? room.lastMessage.userId,
-            timestamp: room.lastMessage.timestamp ?? room.lastMessage.createdAt,
-            ...room.lastMessage,
-          } : null,
+          name: room.name ?? `Chat ${idx + 1}`,
+          members: Array.isArray(room.members) ? room.members : [],
           ...room,
         }));
       },
@@ -159,6 +178,20 @@ export const apiSlice = createApi({
             ]
           : [{ type: "Chatroom", id: "LIST" }],
     }),
+    getChatroomById: builder.query({
+      query: (id) => API_ENDPOINTS.CHATROOMS.GET_BY_ID(id),
+      transformResponse: (response) => {
+        if (!response) return null;
+        return {
+          id: response.id,
+          name: response.name ?? `Chat ${response.id}`,
+          members: Array.isArray(response.members) ? response.members : [],
+          ...response,
+        };
+      },
+      providesTags: (result) =>
+        result ? [{ type: "Chatroom", id: result.id }] : [],
+    }),
     createChatroom: builder.mutation({
       query: (body) => ({
         // body: { targetuserid }
@@ -168,10 +201,20 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: [{ type: "Chatroom", id: "LIST" }],
     }),
+    deleteChatroom: builder.mutation({
+      query: (id) => ({
+        url: API_ENDPOINTS.CHATROOMS.DELETE(id),
+        method: "DELETE",
+      }),
+      invalidatesTags: (result, error, id) => [
+        { type: "Chatroom", id },
+        { type: "Chatroom", id: "LIST" }
+      ],
+    }),
 
     // === Messages ===
     getMessagesByRoom: builder.query({
-      // arg จะเป็น { id: chatRoomId, filter: 'sent' | 'received' }
+      // arg will be { id: chatRoomId, filter: 'sent' | 'received' }
       query: ({ id, filter }) => ({
         url: API_ENDPOINTS.MESSAGES.GET_BY_ROOM(id),
         params: { filter },
@@ -181,17 +224,31 @@ export const apiSlice = createApi({
         return response.map((msg, idx) => ({
           id: msg.id ?? msg._id ?? `msg-${Date.now()}-${idx}`,
           roomId: msg.roomId ?? msg.chatroomId,
-          senderId: msg.senderId ?? msg.userId ?? msg.from,
-          text: msg.text ?? msg.content ?? msg.message ?? '',
+          senderId: msg.senderId ?? msg.userId,
+          text: msg.originalmessage ?? msg.text ?? msg.content ?? '',
           timestamp: msg.timestamp ?? msg.createdAt ?? msg.date ?? new Date().toISOString(),
-          translatedText: msg.translatedText ?? msg.translated ?? null,
-          status: msg.status ?? 'sent',
           ...msg,
         }));
       },
       providesTags: (result, error, { id }) => [
         { type: "Message", id: `ROOM_${id}` },
       ],
+    }),
+    getMessageById: builder.query({
+      query: (id) => API_ENDPOINTS.MESSAGES.GET_BY_ID(id),
+      transformResponse: (response) => {
+        if (!response) return null;
+        return {
+          id: response.id,
+          roomId: response.roomId ?? response.chatroomId,
+          senderId: response.senderId ?? response.userId,
+          text: response.originalmessage ?? response.text ?? response.content ?? '',
+          timestamp: response.timestamp ?? response.createdAt ?? response.date ?? new Date().toISOString(),
+          ...response,
+        };
+      },
+      providesTags: (result) =>
+        result ? [{ type: "Message", id: result.id }] : [],
     }),
     sendMessage: builder.mutation({
       query: (body) => ({
@@ -204,36 +261,46 @@ export const apiSlice = createApi({
         { type: "Message", id: `ROOM_${roomid}` },
       ],
     }),
+    updateMessage: builder.mutation({
+      query: ({ id, ...patch }) => ({
+        url: API_ENDPOINTS.MESSAGES.UPDATE(id),
+        method: "PUT",
+        body: patch, // { originalmessage, roomid }
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Message", id },
+        { type: "Message", id: `ROOM_${result?.roomId}` } // Invalidate room messages cache
+      ],
+    }),
+    deleteMessage: builder.mutation({
+      query: (id) => ({
+        url: API_ENDPOINTS.MESSAGES.DELETE(id),
+        method: "DELETE",
+      }),
+      invalidatesTags: (result, error, id) => [
+        { type: "Message", id },
+        { type: "Message", id: `ROOM_${result?.roomId}` } // Invalidate room messages cache
+      ],
+    }),
 
     // === Friends ===
     getMyFriendStatus: builder.query({
       query: () => API_ENDPOINTS.FRIENDS.GET_STATUS,
-      // Normalize friend data to ensure consistent shape
       transformResponse: (response) => {
         if (!Array.isArray(response)) return [];
         return response.map((friendship) => ({
           id: friendship.friendshipid ?? friendship.id,
           status: friendship.status ?? 'pending',
-          // Normalize user data within friendship
-          user: friendship.user ? {
-            id: friendship.user.userid,
-            username: friendship.user.username,
-            originallang: friendship.user.originallang,
-            ...friendship.user,
-          } : null,
           sender: friendship.sender ? {
             id: friendship.sender.userid,
             username: friendship.sender.username,
-            originallang: friendship.sender.originallang,
             ...friendship.sender,
           } : null,
           receiver: friendship.receiver ? {
             id: friendship.receiver.userid,
             username: friendship.receiver.username,
-            originallang: friendship.receiver.originallang,
             ...friendship.receiver,
           } : null,
-          createdAt: friendship.createdAt ?? friendship.timestamp ?? new Date().toISOString(),
           ...friendship,
         }));
       },
@@ -270,7 +337,7 @@ export const apiSlice = createApi({
   }),
 });
 
-// RTK Query จะสร้าง Hooks ให้เราอัตโนมัติจาก "endpoints" ที่เรากำหนด
+// RTK Query generates Hooks automatically from "endpoints" we define
 export const {
   // Auth
   useSignupMutation,
@@ -278,15 +345,21 @@ export const {
   useLogoutMutation,
   // Users
   useGetUsersQuery,
+  useGetUserByIdQuery,
   useGetMeQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,
   // Chatrooms
   useGetChatroomsQuery,
+  useGetChatroomByIdQuery,
   useCreateChatroomMutation,
+  useDeleteChatroomMutation,
   // Messages
   useGetMessagesByRoomQuery,
+  useGetMessageByIdQuery,
   useSendMessageMutation,
+  useUpdateMessageMutation,
+  useDeleteMessageMutation,
   // Friends
   useGetMyFriendStatusQuery,
   useSendFriendRequestMutation,

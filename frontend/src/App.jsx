@@ -1,11 +1,9 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-// Import Layout
-import MainLayout from "./components/layout/MainLayout.jsx"; // <--- Import Layout ใหม่
+import MainLayout from "./components/layout/MainLayout.jsx";
 import ProtectedRoute from "./components/layout/ProtectedRoute.jsx";
 
-// Import Pages
 import LoginPage from "./pages/LoginPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
 import ChatPage from "./pages/ChatPage.jsx";
@@ -13,6 +11,7 @@ import FriendsPage from "./pages/FriendsPage.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
 
+// Main application component with public and protected routes
 const App = () => {
   return (
     <Router>

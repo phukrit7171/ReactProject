@@ -3,49 +3,44 @@ import { Box, Typography } from "@mui/material";
 import MessageList from "./MessageList.jsx";
 import MessageInput from "./MessageInput.jsx";
 import LoadingSpinner from "../../components/common/LoadingSpinner.jsx";
-// 1. Import the hooks
 import {
   useGetMessagesByRoomQuery,
   useSendMessageMutation,
 } from "../../services/apiSlice.js";
 
+// Displays messages in a selected chat room with input functionality
 const ChatWindow = ({ selectedRoomId }) => {
-  // 2. Call the query hook.
-  // We use `skip` to prevent fetching if no room is selected.
-  // We also use `pollingInterval` to refetch messages every 3 seconds (as per your workflow)
+  // Fetch messages for the selected room
   const {
     data: messages = [],
     isLoading,
     isError,
     error,
   } = useGetMessagesByRoomQuery(
-    { id: selectedRoomId, filter: "received" },
+    { id: selectedRoomId },
     {
       skip: !selectedRoomId,
-      pollingInterval: 3000, // Polls every 3 seconds
     }
   );
 
-  // 3. Call the mutation hook
+  // Mutation hook for sending messages
   const [sendMessage] = useSendMessageMutation();
 
   const handleSendMessage = async (messageText) => {
     if (!selectedRoomId) return;
 
     try {
-      // 4. Call the mutation
+      // Send the message to the selected room
       await sendMessage({
         roomid: selectedRoomId,
         originalmessage: messageText,
       }).unwrap();
-      // Note: We don't need to manually refetch.
-      // The poll will pick it up, or we could use 'invalidatesTags' in apiSlice.
     } catch (err) {
       console.error("Failed to send message:", err);
     }
   };
 
-  // 5. Handle different states
+  // Handle case when no room is selected
   if (!selectedRoomId) {
     return (
       <Box sx={{ flex: 1, display: "grid", placeItems: "center" }}>
@@ -54,11 +49,11 @@ const ChatWindow = ({ selectedRoomId }) => {
     );
   }
 
-  // 6. Error state
+  // Handle error state
   if (isError) {
     return (
       <Box sx={{ flex: 1, display: 'grid', placeItems: 'center' }}>
-        <ErrorMessage message={error?.data?.message || 'Failed to load messages'} />
+        <Typography color="error">Error: {error?.data?.message || 'Failed to load messages'}</Typography>
       </Box>
     );
   }

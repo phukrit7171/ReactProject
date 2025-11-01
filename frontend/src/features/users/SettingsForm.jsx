@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Button, Box, Typography, Alert } from '@mui/material';
+import { TextField, Button, Box, Typography, Alert, Paper } from '@mui/material';
 import { useGetMeQuery, useUpdateUserMutation } from '../../services/apiSlice.js';
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 
+// Form for updating user profile settings
 const SettingsForm = () => {
-  const { data: currentUser, isLoading: isLoadingMe, isError, error } = useGetMeQuery();
-  const [updateUser, { isLoading: isUpdating, isSuccess, isError: isUpdateError, error: updateError }] =
+  // Using refetchOnMountOrArgChange to ensure fresh data when switching accounts
+  const { data: currentUser, isLoading: isLoadingMe, isError, error, refetch } = useGetMeQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
+  const [updateUser, { isLoading: isUpdating, isError: isUpdateError, error: updateError }] =
     useUpdateUserMutation();
 
   const [formData, setFormData] = useState({ username: '', originallang: '' });
@@ -20,29 +24,32 @@ const SettingsForm = () => {
     }
   }, [currentUser]);
 
+  // Refetch user data when component mounts to ensure we have the current user
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const userId = currentUser?.id || currentUser?._id || currentUser?.userid; // ✅ เพิ่มกรณีนี้
-  if (!userId) {
-    console.error('No user ID found in currentUser:', currentUser);
-    return alert('User data not loaded yet. Please wait.');
-  }
+    const userId = currentUser?.id || currentUser?._id || currentUser?.userid;
+    if (!userId) {
+      console.error('No user ID found in currentUser:', currentUser);
+      return alert('User data not loaded yet. Please wait.');
+    }
 
-  console.log("Submitting update for user:", currentUser);
-
-  try {
-    await updateUser({ id: userId, ...formData }).unwrap();
-    setSuccessMessage('Settings saved successfully!');
-    setTimeout(() => setSuccessMessage(''), 3000);
-  } catch (err) {
-    console.error('Failed to update settings:', err);
-  }
-};
+    try {
+      await updateUser({ id: userId, ...formData }).unwrap();
+      setSuccessMessage('Settings saved successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      console.error('Failed to update settings:', err);
+    }
+  };
 
 
   if (isLoadingMe) return <LoadingSpinner />;
@@ -74,6 +81,34 @@ const SettingsForm = () => {
         ⚙️ User Settings
       </Typography>
 
+      <Paper 
+        elevation={2} 
+        sx={{ 
+          p: 2, 
+          mb: 2, 
+          backgroundColor: '#f5f5f5',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}
+      >
+        <Typography variant="body1">
+          <strong>Your User ID:</strong>
+        </Typography>
+        <Typography 
+          variant="body1" 
+          sx={{ 
+            fontFamily: 'monospace', 
+            backgroundColor: '#e0e0e0', 
+            p: 1, 
+            borderRadius: 1,
+            wordBreak: 'break-all'
+          }}
+        >
+          {currentUser?.id || currentUser?.userid || 'Loading...'}
+        </Typography>
+      </Paper>
+
       <TextField
         label="Username"
         name="username"
@@ -84,7 +119,7 @@ const SettingsForm = () => {
       />
 
       <TextField
-        label="Original Language (e.g., th, en)"
+        label="Original Language"
         name="originallang"
         value={formData.originallang}
         onChange={handleChange}
@@ -100,7 +135,7 @@ const SettingsForm = () => {
 
       {isUpdateError && (
         <Alert severity="error" sx={{ textAlign: 'center' }}>
-          {updateError?.data?.message || ' Failed to save settings. Please try again.'}
+          {updateError?.data?.message || 'Failed to save settings. Please try again.'}
         </Alert>
       )}
 

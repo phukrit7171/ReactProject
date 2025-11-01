@@ -3,9 +3,9 @@ import react from '@vitejs/plugin-react-swc';
 
 export default defineConfig({
   server: {
-    host: true, // เพื่อให้เข้าถึงได้จากภายนอก container
+    host: true, // Allow access from outside container
     port: 3000,
-    strictPort: true, // ไม่ให้เปลี่ยน port อัตโนมัติ
+    strictPort: true, // Don't change port automatically
     hmr: {
       host: 'localhost',
       port: 3000,
@@ -13,9 +13,9 @@ export default defineConfig({
       protocol: 'ws'
     },
     watch: {
-      usePolling: true,      // จำเป็นสำหรับ Docker ใน Windows
-      interval: 1000,        // ลดการใช้ CPU
-      followSymlinks: false  // ไม่ต้องติดตาม symlinks
+      usePolling: true,      // Required for Docker on Windows
+      interval: 1000,        // Reduce CPU usage
+      followSymlinks: false  // Don't follow symlinks
     }
   },
   plugins: [react()]

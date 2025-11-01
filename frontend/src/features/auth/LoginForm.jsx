@@ -1,10 +1,10 @@
-// src/auth/LoginForm.jsx
 import React, { useState } from "react";
 import { Box, TextField, Button, Typography, Paper } from "@mui/material";
 import { useLoginMutation } from "../../services/apiSlice";
 import { saveToken } from "../../utils/tokenStorage";
 import { useNavigate } from "react-router-dom";
 
+// Login form component for user authentication
 export default function LoginForm() {
   const navigate = useNavigate();
   const [login, { isLoading: loading, error }] = useLoginMutation();
@@ -18,7 +18,7 @@ export default function LoginForm() {
     e.preventDefault();
     try {
       const res = await login(form).unwrap();
-      // save token and navigate
+      // save token and navigate to home page
       if (res?.token) saveToken(res.token);
       navigate("/");
     } catch (err) {
@@ -85,7 +85,7 @@ export default function LoginForm() {
           )}
 
           <Typography variant="body2" mt={2}>
-            Don’t have an account?{" "}
+            Don't have an account?{" "}
             <span
               style={{ color: "orange", cursor: "pointer" }}
               onClick={() => navigate("/register")}
