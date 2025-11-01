@@ -225,7 +225,10 @@ export const apiSlice = createApi({
           id: msg.id ?? msg._id ?? `msg-${Date.now()}-${idx}`,
           roomId: msg.roomId ?? msg.chatroomId,
           senderId: msg.senderId ?? msg.userId,
-          text: msg.originalmessage ?? msg.text ?? msg.content ?? '',
+          // Store both original and translated messages for display logic in components
+          originalmessage: msg.originalmessage ?? msg.text ?? msg.content ?? '',
+          translatemessage: msg.translatemessage ?? msg.text ?? msg.content ?? '',
+          // Will determine which to display in MessageList component based on sender identity
           timestamp: msg.timestamp ?? msg.createdAt ?? msg.date ?? new Date().toISOString(),
           ...msg,
         }));
@@ -242,7 +245,10 @@ export const apiSlice = createApi({
           id: response.id,
           roomId: response.roomId ?? response.chatroomId,
           senderId: response.senderId ?? response.userId,
-          text: response.originalmessage ?? response.text ?? response.content ?? '',
+          // Store both original and translated messages for display logic in components
+          originalmessage: response.originalmessage ?? response.text ?? response.content ?? '',
+          translatemessage: response.translatemessage ?? response.text ?? response.content ?? '',
+          // Will determine which to display in components based on sender identity
           timestamp: response.timestamp ?? response.createdAt ?? response.date ?? new Date().toISOString(),
           ...response,
         };
